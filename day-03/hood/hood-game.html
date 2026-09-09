@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Screens with Custom Backgrounds</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        canvas { border: 2px solid #000; }
+        #instructions { color: white; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="instructions">
+        P1: Arrows (Move/Jump) | P2: WASD (Move/Jump)<br>
+        Walk off the <strong>RIGHT edge</strong> to go to Screen 2 (Snow).<br>
+        Walk off the <strong>LEFT edge</strong> to go back to Screen 1 (Rain).<br>
+        <em>Make sure zx-spectrum.jpg and barbi.jpg are in the same folder!</em>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Load the sprite sheet and backgrounds
+        const spriteSheet = new Image();
+        spriteSheet.src = 'spritesheet.png';
+
+        const bgImage1 = new Image();
+        bgImage1.src = 'zx-spectrum.jpeg';
+
+        const bgImage2 = new Image();
+        bgImage2.src = 'barbi.jpeg';
+
+        // Physics settings
+        const GRAVITY = 0.7;
+        const JUMP_STRENGTH = -14;
+        const MOVE_SPEED = 5;
+        const FRAME_COUNT = 36;
+
+        // Screen Locations (Levels)
+        const screens = [
+            { name: "SCREEN 1 (RAIN)", groundY: 550, platforms: [{ x: 250, y: 450, w: 200, h: 20 }, { x: 550, y: 350, w: 150, h: 20 }] },
+            { name: "SCREEN 2 (SNOW)", groundY: 480, platforms: [{ x: 100, y: 350, w: 150, h: 20 }, { x: 450, y: 250, w: 200, h: 20 }] }
+        ];
+
+        let currentScreenIndex = 0;
+
+        // WEATHER PARTICLES
+        const rainDrops = [];
+        const snowFlakes = [];
+        const MAX_RAIN = 150;
+        const MAX_SNOW = 100;
+
+        for (let i = 0; i < MAX_RAIN; i++) {
+            rainDrops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, len: 10 + Math.random() * 15, speed: 8 + Math.random() * 6 });
+        }
+        for (let i = 0; i < MAX_SNOW; i++) {
+            snowFlakes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: 1 + Math.random() * 3, speed: 1 + Math.random() * 2, driftSpeed: 0.5 + Math.random() * 1.5 });
+        }
+
+        // Create two player objects
+        let players = [
+            {
+                id: 1, controls: { left: 'ArrowLeft', right: 'ArrowRight', jump: 'ArrowUp' },
+                x: 100, y: screens[0].groundY - 80, width: 50, height: 80,
+                vx: 0, vy: 0, onGround: false, facing: 1, currentFrame: 0
+            },
+            {
+                id: 2, controls: { left: 'KeyA', right: 'KeyD', jump: 'KeyW' },
+                x: 650, y: screens[0].groundY - 80, width: 50, height: 80,
+                vx: 0, vy: 0, onGround: false, facing: -1, currentFrame: 0
+            }
+        ];
+
+        // Input handling
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+        // Function to switch screen locations
+        function switchScreen(newIndex) {
+            currentScreenIndex = newIndex;
+            let screen = screens[currentScreenIndex];
+
+            players.forEach((player, i) => {
+                if (newIndex === 1) {
+                    player.x = 10 + (i * 40);
+                } else {
+                    player.x = canvas.width - player.width - 10 - (i * 40);
+                }
+                player.y = screen.groundY - player.height;
+                player.vx = 0;
+                player.vy = 0;
+                player.onGround = true;
+            });
+        }
+
+        // Check collisions
+        function checkCollisions(player) {
+            const screen = screens[currentScreenIndex];
+
+            if (player.y + player.height > screen.groundY) {
+                player.y = screen.groundY - player.height;
+                player.vy = 0;
+                player.onGround = true;
+            } else {
+                player.onGround = false;
+            }
+
+            for (let plat of screen.platforms) {
+                if (player.x < plat.x + plat.w && player.x + player.width > plat.x &&
+                    player.y < plat.y + plat.h && player.y + player.height > plat.y) {
+                    if (player.vy > 0 && player.y + player.height - player.vy <= plat.y) {
+                        player.y = plat.y - player.height;
+                        player.vy = 0;
+                        player.onGround = true;
+                    }
+                }
+            }
+        }
+
+        // Update Weather Logic
+        function updateWeather() {
+            if (currentScreenIndex === 0) {
+                rainDrops.forEach(drop => {
+                    drop.y += drop.speed;
+                    drop.x -= drop.speed * 0.2;
+                    if (drop.y > canvas.height) {
+                        drop.y = -drop.len;
+                        drop.x = Math.random() * (canvas.width + 100);
+                    }
+                    if (drop.x < -drop.len) drop.x = canvas.width;
+                });
+            } else {
+                snowFlakes.forEach(flake => {
+                    flake.y += flake.speed;
+                    flake.x += Math.sin(flake.y * 0.01) * flake.driftSpeed;
+                    if (flake.y > canvas.height) {
+                        flake.y = -flake.r;
+                        flake.x = Math.random() * canvas.width;
+                    }
+                    if (flake.x < 0) flake.x = canvas.width;
+                    if (flake.x > canvas.width) flake.x = 0;
+                });
+            }
+        }
+
+        // Update logic
+        function update() {
+            players.forEach(player => {
+                if (keys[player.controls.left]) {
+                    player.vx = -MOVE_SPEED;
+                    player.facing = -1;
+                } else if (keys[player.controls.right]) {
+                    player.vx = MOVE_SPEED;
+                    player.facing = 1;
+                } else {
+                    player.vx = 0;
+                }
+
+                if (keys[player.controls.jump] && player.onGround) {
+                    player.vy = JUMP_STRENGTH;
+                    player.onGround = false;
+                }
+
+                player.vy += GRAVITY;
+                player.x += player.vx;
+                player.y += player.vy;
+
+                if (player.x > canvas.width && currentScreenIndex === 0) {
+                    switchScreen(1);
+                }
+                else if (player.x < -player.width && currentScreenIndex === 1) {
+                    switchScreen(0);
+                }
+
+                if (player.x < 0 && currentScreenIndex === 0) player.x = 0;
+                if (player.x > canvas.width - player.width && currentScreenIndex === 1) player.x = canvas.width - player.width;
+
+                checkCollisions(player);
+
+                if (Math.abs(player.vx) > 0) {
+                    player.currentFrame += 0.15;
+                    if (player.currentFrame >= FRAME_COUNT) player.currentFrame = 0;
+                } else {
+                    player.currentFrame = 0;
+                }
+            });
+
+            updateWeather();
+        }
+
+        // Draw Weather Logic
+        function drawWeather() {
+            if (currentScreenIndex === 0) {
+                ctx.strokeStyle = 'rgba(173, 216, 230, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                rainDrops.forEach(drop => {
+                    ctx.moveTo(drop.x, drop.y);
+                    ctx.lineTo(drop.x - 5, drop.y - drop.len);
+                });
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                snowFlakes.forEach(flake => {
+                    ctx.moveTo(flake.x + flake.r, flake.y);
+                    ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+                });
+                ctx.fill();
+            }
+        }
+
+        // Draw logic
+        function draw() {
+            const screen = screens[currentScreenIndex];
+            
+            // BACKGROUND DRAWING (Using the new images)
+            if (currentScreenIndex === 0) {
+                // Draw zx-spectrum.jpg
+                if (bgImage1.complete && bgImage1.naturalHeight > 0) {
+                    ctx.drawImage(bgImage1, 0, 0, canvas.width, canvas.height);
+                } else {
+                    // Fallback to solid blue if image not found
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            } else {
+                // Draw barbi.jpg
+                if (bgImage2.complete && bgImage2.naturalHeight > 0) {
+                    ctx.drawImage(bgImage2, 0, 0, canvas.width, canvas.height);
+                } else {
+                    // Fallback to solid purple if image not found
+                    ctx.fillStyle = '#2E0854';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            // Ground (Semi-transparent so the background shows through slightly)
+            ctx.fillStyle = currentScreenIndex === 0 ? 'rgba(76, 175, 80, 0.8)' : 'rgba(139, 69, 19, 0.8)';
+            ctx.fillRect(0, screen.groundY, canvas.width, canvas.height - screen.groundY);
+
+            // Platforms
+            ctx.fillStyle = '#8B4513';
+            for (let plat of screen.platforms) {
+                ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+            }
+
+            // Draw "Portal" hints
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = "black"; // Add outline for readability on bright images
+            ctx.lineWidth = 3;
+            if (currentScreenIndex === 0) {
+                ctx.strokeText("--> Screen 2 (Snow)", canvas.width - 180, 50);
+                ctx.fillText("--> Screen 2 (Snow)", canvas.width - 180, 50);
+            } else {
+                ctx.strokeText("<-- Screen 1 (Rain)", 20, 50);
+                ctx.fillText("<-- Screen 1 (Rain)", 20, 50);
+            }
+            ctx.font = "24px Arial";
+            ctx.fillStyle = "yellow";
+            ctx.strokeText(screen.name, canvas.width / 2 - 80, 30);
+            ctx.fillText(screen.name, canvas.width / 2 - 80, 30);
+
+            // Draw Players
+            if (spriteSheet.complete) {
+                const frameWidth = spriteSheet.width / 5;
+                const frameHeight = spriteSheet.height / 8;
+
+                players.forEach(player => {
+                    let frameIndex = Math.floor(player.currentFrame);
+                    let col = frameIndex % 5;
+                    let row = Math.floor(frameIndex / 5);
+
+                    let sx = col * frameWidth;
+                    let sy = row * frameHeight;
+
+                    ctx.save();
+                    if (player.facing === -1) {
+                        ctx.translate(player.x + player.width / 2, 0);
+                        ctx.scale(-1, 1);
+                        ctx.translate(-(player.x + player.width / 2), 0);
+                    }
+
+                    ctx.drawImage(spriteSheet, sx, sy, frameWidth, frameHeight, player.x, player.y, player.width, player.height);
+                    
+                    ctx.fillStyle = "black";
+                    ctx.font = "16px Arial";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`P${player.id}`, player.x + player.width / 2, player.y - 5);
+                    
+                    ctx.restore();
+                });
+            }
+
+            // Draw Weather (on top of everything)
+            drawWeather();
+        }
+
+        // Game Loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game after loading the image
+        spriteSheet.onload = () => { gameLoop(); };
+        spriteSheet.onerror = () => {
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "red";
+            ctx.textAlign = "center";
+            ctx.fillText("Failed to load spritesheet.png. Please check the file path.", canvas.width / 2, canvas.height / 2);
+        };
+    </script>
+</body>
+</html>
