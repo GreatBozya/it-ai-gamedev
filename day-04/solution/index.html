@@ -290,6 +290,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EXRLoader }     from 'three/addons/loaders/EXRLoader.js';
 import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /* ============================================================
    КОНСТАНТЫ
@@ -402,7 +403,7 @@ exrLoader.load(
 );
 
 /* ============================================================
-   ПОДИУМ  (чёрное зеркало + белый кант)
+   ПОДИУМ  (чёрное зеркало + отражения + тени + белый кант)
    ============================================================ */
 const podiumGroup = new THREE.Group();
 scene.add(podiumGroup);
@@ -456,6 +457,31 @@ shadowCatcher.position.y = 0.004;
 shadowCatcher.receiveShadow = true;
 podiumGroup.add(shadowCatcher);
 
+// белый кант по верхней и нижней кромке
+const edgeMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  emissive: 0xffffff,
+  emissiveIntensity: 0.45,
+  roughness: 0.35,
+  metalness: 0.0
+});
+
+const edgeTop = new THREE.Mesh(
+  new THREE.TorusGeometry(PODIUM_RADIUS, 0.018, 12, 180),
+  edgeMaterial
+);
+edgeTop.rotation.x = -Math.PI / 2;
+edgeTop.position.y = 0;
+podiumGroup.add(edgeTop);
+
+const edgeBottom = new THREE.Mesh(
+  new THREE.TorusGeometry(PODIUM_RADIUS, 0.014, 10, 180),
+  edgeMaterial
+);
+edgeBottom.rotation.x = -Math.PI / 2;
+edgeBottom.position.y = -PODIUM_HEIGHT;
+podiumGroup.add(edgeBottom);
+
 /* ============================================================
    АКЦЕНТНЫЙ СВЕТЯЩИЙСЯ КРУГ ВОКРУГ ПОДИУМА
    ============================================================ */
@@ -505,6 +531,7 @@ glowPlane.rotation.x = -Math.PI / 2;
 glowPlane.position.y = -PODIUM_HEIGHT + 0.012;
 glowGroup.add(glowPlane);
 
+
 /* ============================================================
    ТРИ ИСТОЧНИКА СВЕТА: KEY / FILL / RIM
    ============================================================ */
@@ -513,8 +540,7 @@ const keyLight = new THREE.SpotLight(0xffffff, 600, 50, Math.PI / 5.5, 0.45, 2);
 keyLight.position.set(6.5, 9.0, 5.5);
 keyLight.target.position.set(0, 0.6, 0);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(4096, 4096);
-keyLight.shadow.radius = 2;
+keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.near = 1;
 keyLight.shadow.camera.far  = 40;
 keyLight.shadow.bias        = -0.0006;
@@ -826,7 +852,6 @@ function animate(){
   /* ---- пульсация акцентного кольца ---- */
   glowRingMaterial.opacity = 0.72 + Math.sin(elapsed * 2.0) * 0.28;
   glowPlane.material.opacity = 0.42 + Math.sin(elapsed * 2.0) * 0.16;
-  underGlow.intensity = 5.5 + Math.sin(elapsed * 2.0) * 1.8;
 
   controls.update();
   renderer.render(scene, camera);
