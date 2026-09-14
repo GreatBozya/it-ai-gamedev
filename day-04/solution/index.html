@@ -404,49 +404,57 @@ exrLoader.load(
 /* ============================================================
    ПОДИУМ  (чёрное зеркало + белый кант)
    ============================================================ */
-const podiumGroup = new THREE.Group();     // вращается целиком вместе с авто
+const podiumGroup = new THREE.Group();
 scene.add(podiumGroup);
 
+// --- корпус: боковая стенка + дно (верх скрыт Reflector'ом) ---
 const podiumMaterial = new THREE.MeshStandardMaterial({
   color: 0x07080a,
   metalness: 1.0,
-  roughness: 0.05,
-  envMapIntensity: 1.8
+  roughness: 0.12,
+  envMapIntensity: 1.6
 });
 
 const podiumBody = new THREE.Mesh(
   new THREE.CylinderGeometry(PODIUM_RADIUS, PODIUM_RADIUS, PODIUM_HEIGHT, 128, 1, false),
   podiumMaterial
 );
-podiumBody.position.y = -PODIUM_HEIGHT / 2;   // верхняя плоскость ровно на y = 0
+podiumBody.position.y = -PODIUM_HEIGHT / 2;
 podiumBody.castShadow    = true;
 podiumBody.receiveShadow = true;
 podiumGroup.add(podiumBody);
 
-// белый кант по верхней и нижней кромке
-const edgeMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  emissive: 0xffffff,
-  emissiveIntensity: 0.45,
-  roughness: 0.35,
-  metalness: 0.0
-});
+/* --- ЗЕРКАЛО: настоящий planar-Reflector вместо верхней грани --- */
+const reflectionResolution = 2048;   // 2048 даёт резкое отражение 4K-моделей
 
-const edgeTop = new THREE.Mesh(
-  new THREE.TorusGeometry(PODIUM_RADIUS, 0.018, 12, 180),
-  edgeMaterial
+const podiumReflector = new Reflector(
+  new THREE.CircleGeometry(PODIUM_RADIUS, 160),
+  {
+    clipBias: 0.003,
+    textureWidth:  reflectionResolution,
+    textureHeight: reflectionResolution,
+    color: 0x0a0c10          // лёгкое затемнение — «чёрное зеркало»
+  }
 );
-edgeTop.rotation.x = -Math.PI / 2;
-edgeTop.position.y = 0;
-podiumGroup.add(edgeTop);
+podiumReflector.rotation.x = -Math.PI / 2;
+podiumReflector.position.y = 0.001;      // 1 мм над верхней гранью — без z-fighting
+podiumGroup.add(podiumReflector);
 
-const edgeBottom = new THREE.Mesh(
-  new THREE.TorusGeometry(PODIUM_RADIUS, 0.014, 10, 180),
-  edgeMaterial
+/* --- ЛОВЕЦ ТЕНЕЙ: прозрачный круг поверх зеркала --- */
+/* Reflector не принимает тени, поэтому добавляем ShadowMaterial-слой.
+   Благодаря одностороннему фронту, в отражении Reflector'а он не виден. */
+const shadowCatcher = new THREE.Mesh(
+  new THREE.CircleGeometry(PODIUM_RADIUS - 0.004, 160),
+  new THREE.ShadowMaterial({
+    color: 0x000000,
+    opacity: 0.85,
+    transparent: true
+  })
 );
-edgeBottom.rotation.x = -Math.PI / 2;
-edgeBottom.position.y = -PODIUM_HEIGHT;
-podiumGroup.add(edgeBottom);
+shadowCatcher.rotation.x = -Math.PI / 2;
+shadowCatcher.position.y = 0.004;
+shadowCatcher.receiveShadow = true;
+podiumGroup.add(shadowCatcher);
 
 /* ============================================================
    АКЦЕНТНЫЙ СВЕТЯЩИЙСЯ КРУГ ВОКРУГ ПОДИУМА
@@ -497,32 +505,6 @@ glowPlane.rotation.x = -Math.PI / 2;
 glowPlane.position.y = -PODIUM_HEIGHT + 0.012;
 glowGroup.add(glowPlane);
 
-// подсветка снизу (under-glow)
-const underGlow = new THREE.PointLight(ACCENT, 6, 9, 2);
-underGlow.position.set(0, 0.15, 0);
-glowGroup.add(underGlow);
-
-/* ============================================================
-   ПОЛ + СЕТКА
-   ============================================================ */
-const floorMaterial = new THREE.MeshStandardMaterial({
-  color: 0x040507,
-  metalness: 0.95,
-  roughness: 0.3,
-  envMapIntensity: 0.6
-});
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), floorMaterial);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -PODIUM_HEIGHT;
-floor.receiveShadow = true;
-scene.add(floor);
-
-const grid = new THREE.GridHelper(200, 200, ACCENT, 0x16202c);
-grid.material.transparent = true;
-grid.material.opacity = 0.1;
-grid.position.y = -PODIUM_HEIGHT + 0.003;
-scene.add(grid);
-
 /* ============================================================
    ТРИ ИСТОЧНИКА СВЕТА: KEY / FILL / RIM
    ============================================================ */
@@ -531,7 +513,8 @@ const keyLight = new THREE.SpotLight(0xffffff, 600, 50, Math.PI / 5.5, 0.45, 2);
 keyLight.position.set(6.5, 9.0, 5.5);
 keyLight.target.position.set(0, 0.6, 0);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.mapSize.set(4096, 4096);
+keyLight.shadow.radius = 2;
 keyLight.shadow.camera.near = 1;
 keyLight.shadow.camera.far  = 40;
 keyLight.shadow.bias        = -0.0006;
