@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3D Автосалон — Showroom</title>
+<style>
+  :root{
+    --accent: #00e5ff;
+    --accent-rgb: 0, 229, 255;
+    --text: #e8eef4;
+    --muted: #78838f;
+    --stroke: rgba(255,255,255,.075);
+    --bg: #05070a;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html, body{
+    height:100%; overflow:hidden; background:var(--bg); color:var(--text);
+    font-family: 'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  canvas#scene{ display:block; position:fixed; inset:0; }
+
+  /* ================= ПАНЕЛИ ================= */
+  .panel{
+    position:relative;
+    background: linear-gradient(155deg, rgba(18,22,28,.86) 0%, rgba(9,11,15,.78) 100%);
+    border:1px solid var(--stroke);
+    border-radius:14px;
+    padding:14px 16px;
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    box-shadow: 0 20px 45px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+    pointer-events:auto;
+  }
+  .panel::before{
+    content:''; position:absolute; left:16px; right:16px; top:0; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb),.6), transparent);
+  }
+
+  .panel h2{
+    font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin-bottom:10px;
+  }
+
+  /* ================= КОЛОНКИ ================= */
+  .col{
+    position:fixed; top:24px; width:268px; display:flex; flex-direction:column;
+    gap:12px; z-index:10; pointer-events:none;
+  }
+  .col-left{ left:24px; }
+  .col-right{ right:24px; }
+
+  /* ================= БРЕНД ================= */
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:36px; height:36px; border-radius:11px; flex:0 0 auto;
+    background: radial-gradient(circle at 30% 30%, #00e5ff, #005f8a 75%);
+    box-shadow: 0 0 22px rgba(var(--accent-rgb),.55);
+  }
+  .brand h1{ font-size:14px; letter-spacing:.14em; font-weight:700; line-height:1.2; }
+  .brand h1 span{ color:var(--accent); }
+  .brand p{ font-size:10px; color:var(--muted); letter-spacing:.09em; margin-top:3px; }
+
+  /* ================= КНОПКИ ================= */
+  .btn{
+    font:inherit; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:#c3ccd6; cursor:pointer; user-select:none;
+    background: rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:9px;
+    padding:8px 12px;
+    transition: background .18s, border-color .18s, color .18s, box-shadow .18s, transform .12s;
+    white-space:nowrap;
+  }
+  .btn:hover{
+    background: rgba(var(--accent-rgb),.09);
+    border-color: rgba(var(--accent-rgb),.5);
+    color:#fff;
+  }
+  .btn:active{ transform: scale(.96); }
+  .btn.active{
+    background: rgba(var(--accent-rgb),.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 18px rgba(var(--accent-rgb),.28), inset 0 0 14px rgba(var(--accent-rgb),.08);
+  }
+  .btn:disabled{ opacity:.4; cursor:wait; }
+
+  /* ================= СПИСОК МОДЕЛЕЙ ================= */
+  .model-list{ display:flex; flex-direction:column; gap:8px; }
+  .model-btn{ width:100%; display:flex; justify-content:space-between; align-items:center; }
+
+  /* ================= ИНФО ================= */
+  .info-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11.5px; padding:5px 0;
+    border-bottom:1px dashed rgba(255,255,255,.055);
+  }
+  .info-row:last-child{ border-bottom:none; }
+  .info-row span{ color:var(--muted); letter-spacing:.05em; }
+  .info-row b{
+    color:var(--accent); font-weight:600;
+    font-family: ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ================= СВЕТ ================= */
+  .light-row{
+    display:grid; grid-template-columns: 1fr 86px 38px;
+    gap:8px; align-items:center; padding:7px 0;
+  }
+  .light-row label{
+    display:flex; align-items:center; gap:8px;
+    font-size:11.5px; color:#c3ccd6; cursor:pointer; transition:opacity .2s;
+  }
+  .swatch{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:3px; border-radius:3px;
+    background: rgba(255,255,255,.13); outline:none; cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:12px; height:12px; border:none; border-radius:50%;
+    background:var(--accent); box-shadow: 0 0 10px rgba(var(--accent-rgb),.85);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:12px; height:12px; border:none; border-radius:50%;
+    background:var(--accent); box-shadow: 0 0 10px rgba(var(--accent-rgb),.85);
+  }
+
+  input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:14px; height:14px; border-radius:4px; position:relative;
+    border:1px solid rgba(255,255,255,.22);
+    background: rgba(255,255,255,.04);
+    cursor:pointer; transition:.15s;
+  }
+  input[type="checkbox"]:checked{
+    background: var(--accent); border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb),.6);
+  }
+  input[type="checkbox"]:checked::after{
+    content:''; position:absolute; left:4px; top:1px;
+    width:4px; height:8px;
+    border:solid #04121a; border-width:0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .light-row .val{
+    font-size:10px; color:var(--muted); text-align:right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ================= НИЖНЯЯ ПАНЕЛЬ ================= */
+  .bottom-bar{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
+    padding:10px 12px; z-index:10; max-width:calc(100vw - 40px);
+  }
+  .divider{ width:1px; height:22px; background:rgba(255,255,255,.09); margin:0 2px; }
+
+  /* ================= ЗАГРУЗЧИК ================= */
+  #loader{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 50% 45%, #0b1016 0%, #05070a 72%);
+    transition: opacity .7s ease, visibility .7s;
+  }
+  #loader.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  .loader-box{ width:320px; text-align:center; }
+  .loader-logo{ font-size:15px; letter-spacing:.32em; margin-bottom:22px; color:#fff; }
+  .loader-logo span{ color:var(--accent); }
+  .loader-track{ height:2px; border-radius:2px; background:rgba(255,255,255,.09); overflow:hidden; }
+  #loaderFill{
+    height:100%; width:0%;
+    background: linear-gradient(90deg,#0077aa,var(--accent));
+    box-shadow: 0 0 16px var(--accent);
+    transition: width .25s ease;
+  }
+  .loader-status{
+    margin-top:12px; font-size:10px; letter-spacing:.2em;
+    color:var(--muted); text-transform:uppercase;
+  }
+
+  /* ================= АДАПТИВ ================= */
+  @media (max-width: 980px){
+    .col{ width:210px; top:12px; }
+    .col-left{ left:12px; }
+    .col-right{ right:12px; }
+    .panel{ padding:11px 12px; border-radius:12px; }
+    .bottom-bar{ bottom:12px; padding:8px; gap:6px; }
+    .btn{ padding:7px 9px; font-size:10px; }
+    .brand h1{ font-size:12px; }
+  }
+  @media (max-width: 700px){
+    .col-right{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- ==================== ЗАГРУЗЧИК ==================== -->
+<div id="loader">
+  <div class="loader-box">
+    <div class="loader-logo">AUTO<span>SHOWROOM</span></div>
+    <div class="loader-track"><div id="loaderFill"></div></div>
+    <div class="loader-status"><span id="loaderPct">0%</span> · инициализация сцены</div>
+  </div>
+</div>
+
+<!-- ==================== ЛЕВАЯ КОЛОНКА ==================== -->
+<div class="col col-left">
+
+  <div class="panel">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <h1>AUTO<span>SHOWROOM</span></h1>
+        <p>3D презентация · 3 модели</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Автомобили</h2>
+    <div class="model-list" id="modelList"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Телеметрия</h2>
+    <div class="info-row"><span>Камера X</span><b id="camX">0.00</b></div>
+    <div class="info-row"><span>Камера Y</span><b id="camY">0.00</b></div>
+    <div class="info-row"><span>Камера Z</span><b id="camZ">0.00</b></div>
+    <div class="info-row"><span>Угол подиума</span><b id="podiumAngle">0°</b></div>
+    <div class="info-row"><span>Модель</span><b id="curModel">—</b></div>
+    <div class="info-row"><span>FPS</span><b id="fps">60</b></div>
+  </div>
+
+</div>
+
+<!-- ==================== ПРАВАЯ КОЛОНКА ==================== -->
+<div class="col col-right">
+  <div class="panel">
+    <h2>Освещение</h2>
+    <div id="lightPanel"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Тонмаппинг</h2>
+    <div class="light-row" style="grid-template-columns:1fr 86px 38px;">
+      <label style="cursor:default;">Экспозиция</label>
+      <input type="range" id="exposure" min="20" max="200" value="100" />
+      <span class="val" id="exposureVal">1.00</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== НИЖНЯЯ ПАНЕЛЬ ==================== -->
+<div class="panel bottom-bar">
+  <button class="btn" id="camLeft">⟲ Камера</button>
+  <button class="btn" id="camRight">⟳ Камера</button>
+  <span class="divider"></span>
+  <button class="btn" id="podLeft">⟲ Подиум</button>
+  <button class="btn" id="podRight">⟳ Подиум</button>
+  <span class="divider"></span>
+  <button class="btn active" id="autoPodium">Авто-подиум</button>
+  <button class="btn" id="autoOrbit">Авто-камера</button>
+  <button class="btn" id="reset">Сброс</button>
+</div>
+
+<!-- ==================== IMPORT MAP ==================== -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EXRLoader }     from 'three/addons/loaders/EXRLoader.js';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+
+/* ============================================================
+   КОНСТАНТЫ
+   ============================================================ */
+const ACCENT            = 0x00e5ff;
+const ACCENT_CSS        = '#00e5ff';
+const PODIUM_RADIUS     = 2.5;      // 5 м в диаметре
+const PODIUM_HEIGHT     = 0.3;
+const CAR_TARGET_LENGTH = 4.2;      // приводим все модели к ~4.2 м
+const MODEL_FILES       = ['model-1.glb', 'model-2.glb', 'model-3.glb'];
+const BG_FILE           = 'background_4k.exr';
+
+/* ============================================================
+   ЗАГРУЗЧИК
+   ============================================================ */
+const loaderEl   = document.getElementById('loader');
+const loaderFill = document.getElementById('loaderFill');
+const loaderPct  = document.getElementById('loaderPct');
+
+const TOTAL_STEPS = 2;
+let stepsDone = 0;
+
+function setProgress(p){
+  const pct = Math.round(THREE.MathUtils.clamp(p, 0, 1) * 100);
+  loaderFill.style.width = pct + '%';
+  loaderPct.textContent  = pct + '%';
+}
+function stepDone(){
+  stepsDone++;
+  setProgress(stepsDone / TOTAL_STEPS);
+  if (stepsDone >= TOTAL_STEPS) hideLoader();
+}
+function hideLoader(){
+  loaderEl.classList.add('hidden');
+  setTimeout(() => { loaderEl.style.display = 'none'; }, 800);
+}
+// страховка
+setTimeout(hideLoader, 20000);
+
+/* ============================================================
+   РЕНДЕРЕР / СЦЕНА / КАМЕРА
+   ============================================================ */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x06080b, 0.009);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 250);
+camera.position.set(6.8, 3.4, 7.6);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.85, 0);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.enablePan      = false;
+controls.minDistance    = 3.5;
+controls.maxDistance    = 22;
+controls.minPolarAngle  = 0.18;
+controls.maxPolarAngle  = Math.PI * 0.495;
+controls.update();
+
+/* ============================================================
+   HDRI (EXR) — фон + отражения
+   ============================================================ */
+const exrLoader = new EXRLoader();
+
+exrLoader.load(
+  BG_FILE,
+  (texture) => {
+    /* --- 1. Правильные настройки качества текстуры --- */
+    texture.mapping      = THREE.EquirectangularReflectionMapping;
+    texture.colorSpace   = THREE.LinearSRGBColorSpace;   // EXR = линейное пространство
+    texture.minFilter    = THREE.LinearMipmapLinearFilter;
+    texture.magFilter    = THREE.LinearFilter;
+    texture.generateMipmaps = true;                       // обязательно для мипмапов
+    texture.anisotropy   = renderer.capabilities.getMaxAnisotropy(); // 8–16×
+    texture.needsUpdate  = true;
+
+    /* --- 2. Фон: полное 4K-разрешение, БЕЗ размытия --- */
+    scene.background           = texture;
+    scene.backgroundIntensity  = 0.55;    // можно подстроить под вкус
+    scene.backgroundBlurriness = 0.0;     // ← ключевое: убираем «мыло» и пиксели
+    scene.backgroundRotation   = new THREE.Euler(0, 0, 0);
+
+    /* --- 3. Отражения: PMREM для корректного IBL --- */
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    const envRT = pmrem.fromEquirectangular(texture);
+    scene.environment = envRT.texture;
+    scene.environmentIntensity = 1.0;
+    pmrem.dispose();
+
+    stepDone();
+  },
+  (xhr) => {
+    if (xhr.total) setProgress(0.08 + (xhr.loaded / xhr.total) * 0.9);
+  },
+  (err) => {
+    console.warn('EXR не загружен, используется резервный фон:', err);
+    scene.background = new THREE.Color(0x05070a);
+    stepDone();
+  }
+);
+
+/* ============================================================
+   ПОДИУМ  (чёрное зеркало + белый кант)
+   ============================================================ */
+const podiumGroup = new THREE.Group();     // вращается целиком вместе с авто
+scene.add(podiumGroup);
+
+const podiumMaterial = new THREE.MeshStandardMaterial({
+  color: 0x07080a,
+  metalness: 1.0,
+  roughness: 0.05,
+  envMapIntensity: 1.8
+});
+
+const podiumBody = new THREE.Mesh(
+  new THREE.CylinderGeometry(PODIUM_RADIUS, PODIUM_RADIUS, PODIUM_HEIGHT, 128, 1, false),
+  podiumMaterial
+);
+podiumBody.position.y = -PODIUM_HEIGHT / 2;   // верхняя плоскость ровно на y = 0
+podiumBody.castShadow    = true;
+podiumBody.receiveShadow = true;
+podiumGroup.add(podiumBody);
+
+// белый кант по верхней и нижней кромке
+const edgeMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  emissive: 0xffffff,
+  emissiveIntensity: 0.45,
+  roughness: 0.35,
+  metalness: 0.0
+});
+
+const edgeTop = new THREE.Mesh(
+  new THREE.TorusGeometry(PODIUM_RADIUS, 0.018, 12, 180),
+  edgeMaterial
+);
+edgeTop.rotation.x = -Math.PI / 2;
+edgeTop.position.y = 0;
+podiumGroup.add(edgeTop);
+
+const edgeBottom = new THREE.Mesh(
+  new THREE.TorusGeometry(PODIUM_RADIUS, 0.014, 10, 180),
+  edgeMaterial
+);
+edgeBottom.rotation.x = -Math.PI / 2;
+edgeBottom.position.y = -PODIUM_HEIGHT;
+podiumGroup.add(edgeBottom);
+
+/* ============================================================
+   АКЦЕНТНЫЙ СВЕТЯЩИЙСЯ КРУГ ВОКРУГ ПОДИУМА
+   ============================================================ */
+const glowGroup = new THREE.Group();
+scene.add(glowGroup);
+
+const glowRingMaterial = new THREE.MeshBasicMaterial({
+  color: ACCENT, transparent: true, opacity: 0.9, toneMapped: false
+});
+const glowRing = new THREE.Mesh(
+  new THREE.TorusGeometry(PODIUM_RADIUS + 0.55, 0.022, 10, 220),
+  glowRingMaterial
+);
+glowRing.rotation.x = -Math.PI / 2;
+glowRing.position.y = -PODIUM_HEIGHT + 0.02;
+glowGroup.add(glowRing);
+
+// мягкое свечение вокруг кольца (canvas-градиент)
+function makeGlowTexture(){
+  const size = 512;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, size*0.28, size/2, size/2, size*0.5);
+  g.addColorStop(0.00, 'rgba(0,229,255,0)');
+  g.addColorStop(0.55, 'rgba(0,229,255,0.75)');
+  g.addColorStop(1.00, 'rgba(0,229,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const glowPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(9.5, 9.5),
+  new THREE.MeshBasicMaterial({
+    map: makeGlowTexture(),
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    opacity: 0.55
+  })
+);
+glowPlane.rotation.x = -Math.PI / 2;
+glowPlane.position.y = -PODIUM_HEIGHT + 0.012;
+glowGroup.add(glowPlane);
+
+// подсветка снизу (under-glow)
+const underGlow = new THREE.PointLight(ACCENT, 6, 9, 2);
+underGlow.position.set(0, 0.15, 0);
+glowGroup.add(underGlow);
+
+/* ============================================================
+   ПОЛ + СЕТКА
+   ============================================================ */
+const floorMaterial = new THREE.MeshStandardMaterial({
+  color: 0x040507,
+  metalness: 0.95,
+  roughness: 0.3,
+  envMapIntensity: 0.6
+});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), floorMaterial);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -PODIUM_HEIGHT;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(200, 200, ACCENT, 0x16202c);
+grid.material.transparent = true;
+grid.material.opacity = 0.1;
+grid.position.y = -PODIUM_HEIGHT + 0.003;
+scene.add(grid);
+
+/* ============================================================
+   ТРИ ИСТОЧНИКА СВЕТА: KEY / FILL / RIM
+   ============================================================ */
+// --- KEY ---
+const keyLight = new THREE.SpotLight(0xffffff, 600, 50, Math.PI / 5.5, 0.45, 2);
+keyLight.position.set(6.5, 9.0, 5.5);
+keyLight.target.position.set(0, 0.6, 0);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far  = 40;
+keyLight.shadow.bias        = -0.0006;
+keyLight.shadow.normalBias  = 0.02;
+scene.add(keyLight, keyLight.target);
+
+// --- FILL ---
+const fillLight = new THREE.SpotLight(0x9fc4ff, 220, 50, Math.PI / 4, 0.75, 2);
+fillLight.position.set(-7.5, 5.5, 6.0);
+fillLight.target.position.set(0, 0.6, 0);
+scene.add(fillLight, fillLight.target);
+
+// --- RIM (акцентный контровой) ---
+const rimLight = new THREE.SpotLight(ACCENT, 520, 50, Math.PI / 5.5, 0.55, 2);
+rimLight.position.set(-5.0, 4.5, -8.0);
+rimLight.target.position.set(0, 0.8, 0);
+scene.add(rimLight, rimLight.target);
+
+// общий мягкий заполняющий (страховка, если EXR не загрузится)
+scene.add(new THREE.HemisphereLight(0x8fa6c0, 0x000000, 0.22));
+
+/* ============================================================
+   ЗАГРУЗКА МОДЕЛЕЙ
+   ============================================================ */
+const gltfLoader = new GLTFLoader();
+const carGroup   = new THREE.Group();      // сюда подставляется текущий автомобиль
+podiumGroup.add(carGroup);
+
+const modelCache = new Map();
+let currentIndex = -1;
+let carPop = 1;                            // анимация появления
+
+async function getModel(index){
+  if (modelCache.has(index)) return modelCache.get(index);
+
+  const gltf = await gltfLoader.loadAsync(MODEL_FILES[index]);
+  const raw  = gltf.scene;
+
+  // если модель «длинная» по Z — разворачиваем вдоль X
+  const rawBox  = new THREE.Box3().setFromObject(raw);
+  const rawSize = rawBox.getSize(new THREE.Vector3());
+  if (rawSize.z > rawSize.x) raw.rotation.y = Math.PI / 2;
+
+  raw.traverse((o) => {
+    if (o.isMesh){
+      o.castShadow    = true;
+      o.receiveShadow = true;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach((m) => {
+        if (m && 'envMapIntensity' in m) m.envMapIntensity = 1.35;
+        if (m) m.needsUpdate = true;
+      });
+    }
+  });
+
+  // --- вписываем модель в габарит подиума ---
+  const holder = new THREE.Group();
+  holder.add(raw);
+
+  const box  = new THREE.Box3().setFromObject(holder);
+  const size = box.getSize(new THREE.Vector3());
+  const length = Math.max(size.x, size.z) || 1;
+  holder.scale.setScalar(CAR_TARGET_LENGTH / length);
+
+  const box2   = new THREE.Box3().setFromObject(holder);
+  const center = box2.getCenter(new THREE.Vector3());
+  holder.position.set(-center.x, -box2.min.y, -center.z);   // центр на оси, днище на y = 0
+
+  modelCache.set(index, holder);
+  return holder;
+}
+
+async function selectModel(index){
+  if (index === currentIndex) return;
+
+  const btn = document.querySelector(`.model-btn[data-index="${index}"]`);
+  if (btn) btn.disabled = true;
+
+  try {
+    const model = await getModel(index);
+    carGroup.clear();
+    carGroup.add(model);
+    carGroup.scale.setScalar(0.001);
+    carPop = 0;
+    currentIndex = index;
+
+    document.getElementById('curModel').textContent = `Model 0${index + 1}`;
+    setActiveModelButton(index);
+  } catch (e){
+    console.error('Ошибка загрузки модели:', e);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function setActiveModelButton(index){
+  document.querySelectorAll('.model-btn').forEach((b) => {
+    b.classList.toggle('active', Number(b.dataset.index) === index);
+  });
+}
+
+/* ---- кнопки моделей ---- */
+const modelList = document.getElementById('modelList');
+MODEL_FILES.forEach((file, i) => {
+  const b = document.createElement('button');
+  b.className = 'btn model-btn';
+  b.dataset.index = i;
+  b.innerHTML = `<span>Model 0${i + 1}</span><span style="opacity:.45">.glb</span>`;
+  b.addEventListener('click', () => selectModel(i));
+  modelList.appendChild(b);
+});
+
+/* ============================================================
+   ПАНЕЛЬ ОСВЕЩЕНИЯ
+   ============================================================ */
+const lightDefs = [
+  { name: 'Key',  light: keyLight,  base: 600, css: '#ffffff' },
+  { name: 'Fill', light: fillLight, base: 220, css: '#9fc4ff' },
+  { name: 'Rim',  light: rimLight,  base: 520, css: ACCENT_CSS }
+];
+
+const lightPanel = document.getElementById('lightPanel');
+
+lightDefs.forEach((def) => {
+  const row = document.createElement('div');
+  row.className = 'light-row';
+
+  const label = document.createElement('label');
+
+  const toggle = document.createElement('input');
+  toggle.type = 'checkbox';
+  toggle.checked = true;
+
+  const swatch = document.createElement('span');
+  swatch.className = 'swatch';
+  swatch.style.background = def.css;
+  swatch.style.boxShadow  = `0 0 9px ${def.css}`;
+
+  const txt = document.createElement('span');
+  txt.textContent = def.name;
+
+  label.append(toggle, swatch, txt);
+
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '200';
+  slider.value = '100';
+
+  const val = document.createElement('span');
+  val.className = 'val';
+  val.textContent = '100%';
+
+  const apply = () => {
+    const mult = Number(slider.value) / 100;
+    def.light.intensity = def.base * mult;
+    def.light.visible   = toggle.checked;
+    val.textContent     = slider.value + '%';
+    label.style.opacity = toggle.checked ? '1' : '.45';
+  };
+
+  toggle.addEventListener('change', apply);
+  slider.addEventListener('input', apply);
+
+  row.append(label, slider, val);
+  lightPanel.appendChild(row);
+  apply();
+});
+
+/* ---- экспозиция ---- */
+const exposureInput = document.getElementById('exposure');
+const exposureVal   = document.getElementById('exposureVal');
+exposureInput.addEventListener('input', () => {
+  const v = Number(exposureInput.value) / 100;
+  renderer.toneMappingExposure = v;
+  exposureVal.textContent = v.toFixed(2);
+});
+
+/* ============================================================
+   СОСТОЯНИЕ ВРАЩЕНИЯ
+   ============================================================ */
+let podiumAngle       = 0;
+let podiumAngleTarget = 0;
+const podiumAuto = { on: true,  speed: 0.22 };
+
+const orbitAuto  = { on: false, speed: 0.28 };
+let camTween = null;
+
+function orbitCameraBy(deltaTheta){
+  const offset = camera.position.clone().sub(controls.target);
+  const sph = new THREE.Spherical().setFromVector3(offset);
+  sph.theta += deltaTheta;
+  camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+}
+
+function tweenCamera(deltaTheta){
+  const offset = camera.position.clone().sub(controls.target);
+  const sph = new THREE.Spherical().setFromVector3(offset);
+  camTween = {
+    theta:  sph.theta,
+    delta:  deltaTheta,
+    radius: sph.radius,
+    phi:    sph.phi,
+    t: 0,
+    dur: 0.75
+  };
+}
+
+/* ============================================================
+   UI-СОБЫТИЯ
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+
+$('camLeft').addEventListener('click',  () => tweenCamera(+Math.PI / 4));
+$('camRight').addEventListener('click', () => tweenCamera(-Math.PI / 4));
+
+$('podLeft').addEventListener('click', () => {
+  podiumAuto.on = false;
+  $('autoPodium').classList.remove('active');
+  podiumAngleTarget += Math.PI / 4;
+});
+$('podRight').addEventListener('click', () => {
+  podiumAuto.on = false;
+  $('autoPodium').classList.remove('active');
+  podiumAngleTarget -= Math.PI / 4;
+});
+
+$('autoPodium').addEventListener('click', (e) => {
+  podiumAuto.on = !podiumAuto.on;
+  e.currentTarget.classList.toggle('active', podiumAuto.on);
+  if (podiumAuto.on) podiumAngleTarget = podiumAngle;
+});
+
+$('autoOrbit').addEventListener('click', (e) => {
+  orbitAuto.on = !orbitAuto.on;
+  e.currentTarget.classList.toggle('active', orbitAuto.on);
+});
+
+$('reset').addEventListener('click', () => {
+  camera.position.set(6.8, 3.4, 7.6);
+  controls.target.set(0, 0.85, 0);
+  controls.update();
+  camTween = null;
+  podiumAngle = 0;
+  podiumAngleTarget = 0;
+  podiumGroup.rotation.y = 0;
+  orbitAuto.on = false;
+  $('autoOrbit').classList.remove('active');
+  podiumAuto.on = true;
+  $('autoPodium').classList.add('active');
+});
+
+/* ============================================================
+   ЦИКЛ АНИМАЦИИ
+   ============================================================ */
+const clock = new THREE.Clock();
+let elapsed = 0;
+let fpsSmooth = 60;
+let uiAccum = 0;
+
+const camXEl   = $('camX');
+const camYEl   = $('camY');
+const camZEl   = $('camZ');
+const angleEl  = $('podiumAngle');
+const fpsEl    = $('fps');
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+  elapsed += dt;
+  fpsSmooth = fpsSmooth * 0.92 + (1 / Math.max(dt, 1e-4)) * 0.08;
+
+  /* ---- вращение подиума ---- */
+  if (podiumAuto.on){
+    podiumAngle += podiumAuto.speed * dt;
+    podiumAngleTarget = podiumAngle;
+  } else {
+    podiumAngle += (podiumAngleTarget - podiumAngle) * Math.min(1, dt * 7);
+  }
+  podiumGroup.rotation.y = podiumAngle;
+
+  /* ---- автоповорот камеры ---- */
+  if (orbitAuto.on && !camTween){
+    orbitCameraBy(orbitAuto.speed * dt);
+  }
+
+  /* ---- плавный доворот камеры по кнопке ---- */
+  if (camTween){
+    camTween.t += dt;
+    const k = Math.min(1, camTween.t / camTween.dur);
+    const e = 1 - Math.pow(1 - k, 3);            // easeOutCubic
+    const sph = new THREE.Spherical(
+      camTween.radius,
+      camTween.phi,
+      camTween.theta + camTween.delta * e
+    );
+    camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(sph));
+    if (k >= 1) camTween = null;
+  }
+
+  /* ---- появление автомобиля ---- */
+  if (carPop < 1){
+    carPop = Math.min(1, carPop + dt * 2.4);
+    const e = 1 - Math.pow(1 - carPop, 3);
+    carGroup.scale.setScalar(0.001 + 0.999 * e);
+  }
+
+  /* ---- пульсация акцентного кольца ---- */
+  glowRingMaterial.opacity = 0.72 + Math.sin(elapsed * 2.0) * 0.28;
+  glowPlane.material.opacity = 0.42 + Math.sin(elapsed * 2.0) * 0.16;
+  underGlow.intensity = 5.5 + Math.sin(elapsed * 2.0) * 1.8;
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  /* ---- обновление панелей (10 раз/сек) ---- */
+  uiAccum += dt;
+  if (uiAccum >= 0.1){
+    uiAccum = 0;
+    camXEl.textContent = camera.position.x.toFixed(2);
+    camYEl.textContent = camera.position.y.toFixed(2);
+    camZEl.textContent = camera.position.z.toFixed(2);
+
+    let deg = THREE.MathUtils.radToDeg(podiumAngle) % 360;
+    if (deg < 0) deg += 360;
+    angleEl.textContent = deg.toFixed(0) + '°';
+
+    fpsEl.textContent = fpsSmooth.toFixed(0);
+  }
+}
+
+/* ============================================================
+   RESIZE
+   ============================================================ */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+setProgress(0.08);
+animate();
+
+(async () => {
+  await selectModel(0);
+  stepDone();
+})();
+</script>
+</body>
+</html>
