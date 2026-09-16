@@ -1,0 +1,2886 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПИКСЕЛЬ — магазин инди-игр</title>
+<meta name="description" content="Игры выбирают люди, а не алгоритмы. Кураторский магазин инди-игр с демо прямо в браузере.">
+<style>
+/* ============================================================
+   ПЕРЕМЕННЫЕ
+   ============================================================ */
+:root{
+  --bg:#0a0b0e;
+  --bg-2:#0d0f14;
+  --surface:#12141a;
+  --surface-2:#181b22;
+  --surface-3:#1f232c;
+  --border:#23262e;
+  --border-2:#2c313b;
+  --text:#e8eaef;
+  --text-2:#b9bfca;
+  --dim:#8b93a1;
+  --muted:#6b7280;
+
+  --accent:#7c5cff;
+  --accent-2:#ff5c8a;
+  --accent-3:#4ddba1;
+  --accent-4:#ffb454;
+
+  --r-sm:8px;
+  --r:12px;
+  --r-lg:18px;
+  --r-xl:24px;
+
+  --shadow:0 10px 30px -12px rgba(0,0,0,.8);
+  --header-h:64px;
+  --maxw:1320px;
+}
+
+/* ============================================================
+   БАЗА
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  min-height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+ul{list-style:none;margin:0;padding:0}
+h1,h2,h3,h4,p{margin:0}
+
+:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+  border-radius:6px;
+}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* Иконки */
+.ico{
+  width:20px;height:20px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.ico-sm{width:16px;height:16px}
+.ico-lg{width:24px;height:24px}
+
+/* ============================================================
+   ОБЛОЖКИ ИГР (CSS-арт)
+   ============================================================ */
+.cover{
+  position:relative;
+  aspect-ratio:3/4;
+  border-radius:var(--r);
+  overflow:hidden;
+  isolation:isolate;
+  background:#111;
+}
+.cover::after{
+  content:"";
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:10px 10px;
+  mix-blend-mode:overlay;
+  opacity:.7;
+  pointer-events:none;
+}
+.cover::before{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 70% 15%, rgba(255,255,255,.22), transparent 55%);
+  pointer-events:none;
+  z-index:1;
+}
+.cover-wide{aspect-ratio:16/9}
+
+/* Варианты арта */
+.c1{background:
+  radial-gradient(circle at 50% 78%, #ffb454 0%, #ff7a4d 22%, transparent 48%),
+  linear-gradient(180deg,#1e1140 0%,#5a2260 42%,#c04a5c 72%,#ffa15c 100%);}
+.c2{background:
+  repeating-linear-gradient(90deg, transparent 0 7px, rgba(124,92,255,.35) 7px 8px),
+  linear-gradient(180deg,#0d0722 0%,#2a1050 55%,#07040f 100%);}
+.c3{background:
+  radial-gradient(circle at 30% 30%, #4ddba1 0%, transparent 45%),
+  linear-gradient(160deg,#04140f 0%,#0c3a2a 55%,#061a14 100%);}
+.c4{background:
+  radial-gradient(circle at 75% 70%, #ff5c8a 0%, transparent 50%),
+  linear-gradient(200deg,#160a20 0%,#3a1038 60%,#0e0616 100%);}
+.c5{background:
+  radial-gradient(circle at 50% 40%, #5cc9ff 0%, transparent 42%),
+  linear-gradient(180deg,#04121f 0%,#0a2d4a 60%,#03101c 100%);}
+.c6{background:
+  radial-gradient(circle at 40% 75%, #ffb454 0%, transparent 50%),
+  linear-gradient(180deg,#1a1208 0%,#3d2a10 55%,#120c05 100%);}
+.c7{background:
+  radial-gradient(circle at 60% 30%, #b07cff 0%, transparent 50%),
+  linear-gradient(200deg,#0b0818 0%,#241246 60%,#080514 100%);}
+.c8{background:
+  radial-gradient(circle at 35% 65%, #ff9a5c 0%, transparent 48%),
+  linear-gradient(160deg,#1a0c14 0%,#4a1830 55%,#120610 100%);}
+.c9{background:
+  radial-gradient(circle at 50% 50%, #4ddba1 0%, transparent 40%),
+  linear-gradient(180deg,#03130d 0%,#0a3a26 50%,#02100a 100%);}
+.c10{background:
+  radial-gradient(circle at 65% 40%, #ff5c8a 0%, transparent 45%),
+  linear-gradient(200deg,#180818 0%,#40143a 55%,#0e040e 100%);}
+.c11{background:
+  radial-gradient(circle at 45% 55%, #7c5cff 0%, transparent 50%),
+  linear-gradient(180deg,#080614 0%,#1e1240 55%,#06040f 100%);}
+.c12{background:
+  radial-gradient(circle at 55% 60%, #ffd05c 0%, transparent 45%),
+  linear-gradient(180deg,#141005 0%,#3a2c08 55%,#0e0a03 100%);}
+
+/* ============================================================
+   ХЕДЕР
+   ============================================================ */
+.header{
+  position:sticky;top:0;z-index:80;
+  height:var(--header-h);
+  background:rgba(10,11,14,.82);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border-bottom:1px solid var(--border);
+}
+.header-inner{
+  max-width:var(--maxw);margin:0 auto;padding:0 24px;
+  height:100%;display:flex;align-items:center;gap:8px;
+}
+
+.logo{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:17px;letter-spacing:-.02em;
+  padding-right:14px;margin-right:4px;
+}
+.logo-mark{
+  width:30px;height:30px;flex:none;
+  border-radius:8px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0a0b0e;font-weight:900;font-size:15px;
+  box-shadow:0 0 18px -4px var(--accent);
+  transition:transform .25s cubic-bezier(.2,.9,.3,1.4);
+}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.08)}
+
+.nav{display:flex;align-items:center;gap:2px}
+.nav-link{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 13px;border-radius:9px;
+  font-size:14px;font-weight:500;color:var(--text-2);
+  transition:background .15s, color .15s;
+  white-space:nowrap;
+}
+.nav-link:hover{background:var(--surface-2);color:var(--text)}
+.nav-link .chev{transition:transform .2s}
+.has-menu:hover .chev{transform:rotate(180deg)}
+
+/* Мега-меню */
+.has-menu{position:relative}
+.mega{
+  position:absolute;top:calc(100% + 10px);left:-12px;
+  width:min(760px,calc(100vw - 48px));
+  padding:20px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:22px;
+  background:var(--surface);
+  border:1px solid var(--border-2);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow), 0 0 60px -20px rgba(124,92,255,.35);
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .18s, transform .18s, visibility .18s;
+}
+.has-menu:hover .mega,
+.has-menu:focus-within .mega{opacity:1;visibility:visible;transform:translateY(0)}
+.mega-col h4{
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:11px;
+}
+.mega-col a{
+  display:block;padding:6px 8px;margin:0 -8px;
+  border-radius:7px;font-size:13.5px;color:var(--text-2);
+  transition:background .12s,color .12s;
+}
+.mega-col a:hover{background:var(--surface-2);color:var(--text)}
+
+/* Поиск */
+.search{
+  flex:1;max-width:340px;
+  display:flex;align-items:center;gap:9px;
+  height:38px;padding:0 13px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--muted);
+  transition:border-color .15s, box-shadow .15s, background .15s;
+}
+.search:focus-within{
+  border-color:#3d4453;background:var(--surface-3);
+  box-shadow:0 0 0 3px rgba(124,92,255,.12);
+}
+.search input{
+  width:100%;height:100%;
+  background:none;border:0;outline:0;
+  color:var(--text);font-size:13.5px;
+}
+.search input::placeholder{color:var(--muted)}
+.search input::-webkit-search-cancel-button{-webkit-appearance:none}
+.search kbd{
+  font-size:10.5px;padding:2px 6px;border-radius:5px;
+  background:var(--surface-3);border:1px solid var(--border-2);
+  color:var(--muted);font-family:inherit;
+}
+
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:4px}
+
+.icon-btn{
+  position:relative;
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  color:var(--text-2);
+  transition:background .15s,color .15s,transform .15s;
+}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.icon-btn:active{transform:scale(.93)}
+
+.badge{
+  position:absolute;top:5px;right:4px;
+  min-width:16px;height:16px;padding:0 4px;
+  display:grid;place-items:center;
+  border-radius:99px;
+  background:var(--accent);
+  color:#fff;font-size:10px;font-weight:700;
+  border:2px solid var(--bg);
+  line-height:1;
+}
+.badge.pink{background:var(--accent-2)}
+
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent-3),var(--accent));
+  display:grid;place-items:center;
+  font-size:12px;font-weight:800;color:#08120d;
+  border:1px solid var(--border-2);
+}
+
+.burger{display:none}
+
+/* Полоса распродажи */
+.sale-strip{
+  height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-4),var(--accent));
+  background-size:300% 100%;
+  animation:slide 8s linear infinite;
+}
+@keyframes slide{to{background-position:300% 0}}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  position:relative;
+  padding:56px 0 48px;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(900px 460px at 78% 8%, rgba(124,92,255,.16), transparent 60%),
+    radial-gradient(700px 400px at 12% 90%, rgba(255,92,138,.10), transparent 60%);
+  pointer-events:none;
+}
+.hero-grid{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+  gap:48px;
+  align-items:center;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 12px 5px 6px;
+  border-radius:99px;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  font-size:12px;font-weight:600;color:var(--text-2);
+  margin-bottom:20px;
+}
+.hero-badge .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent-3);
+  box-shadow:0 0 10px var(--accent-3);
+  margin-left:6px;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.hero-title{
+  font-size:clamp(30px,4.2vw,54px);
+  line-height:1.05;
+  font-weight:800;
+  letter-spacing:-.03em;
+  margin-bottom:14px;
+}
+.hero-title .grad{
+  background:linear-gradient(105deg,var(--accent),var(--accent-2) 55%,var(--accent-4));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hero-desc{
+  font-size:16px;color:var(--text-2);
+  max-width:44ch;margin-bottom:18px;
+}
+.hero-meta{
+  display:flex;flex-wrap:wrap;gap:8px 14px;
+  font-size:13px;color:var(--dim);
+  margin-bottom:24px;
+}
+.hero-meta span{display:flex;align-items:center;gap:6px}
+.hero-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--border-2)}
+
+.hero-price{
+  display:flex;align-items:baseline;gap:10px;
+  margin-bottom:22px;
+}
+.price-now{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.price-min{
+  font-size:12px;color:var(--accent-3);
+  display:flex;align-items:center;gap:5px;
+}
+.price-old{
+  font-size:14px;color:var(--muted);text-decoration:line-through;
+}
+
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:46px;padding:0 22px;
+  border-radius:11px;
+  font-size:14.5px;font-weight:650;
+  letter-spacing:-.005em;
+  transition:transform .15s, background .15s, box-shadow .2s, border-color .15s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),#6647ff);
+  color:#fff;
+  box-shadow:0 8px 24px -8px rgba(124,92,255,.8);
+}
+.btn-primary:hover{box-shadow:0 10px 32px -8px rgba(124,92,255,1)}
+.btn-ghost{
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  color:var(--text);
+}
+.btn-ghost:hover{background:var(--surface-3);border-color:#3a4150}
+.btn-icon{
+  width:46px;height:46px;padding:0;
+  border-radius:11px;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  color:var(--text-2);
+  display:grid;place-items:center;
+  transition:all .15s;
+}
+.btn-icon:hover{border-color:var(--accent-2);color:var(--accent-2)}
+.btn-icon.active{color:var(--accent-2);border-color:var(--accent-2);background:rgba(255,92,138,.1)}
+.btn-icon.active .ico{fill:var(--accent-2)}
+.btn-icon.bump{animation:bump .4s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+
+/* Слайдер hero */
+.hero-visual{position:relative}
+.hero-slides{position:relative;aspect-ratio:16/10;border-radius:var(--r-xl);overflow:hidden;border:1px solid var(--border-2);box-shadow:var(--shadow)}
+.hero-slide{
+  position:absolute;inset:0;
+  opacity:0;transform:scale(1.04);
+  transition:opacity .7s ease, transform 1.2s ease;
+}
+.hero-slide.active{opacity:1;transform:scale(1)}
+.hero-slide .cover{position:absolute;inset:0;border-radius:0;aspect-ratio:auto}
+
+/* «Рамка консоли» */
+.hero-frame{
+  position:absolute;inset:0;
+  border-radius:var(--r-xl);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 80px rgba(0,0,0,.7);
+  pointer-events:none;
+}
+.hero-play{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  z-index:3;
+}
+.play-circle{
+  width:76px;height:76px;border-radius:50%;
+  display:grid;place-items:center;
+  background:rgba(10,11,14,.6);
+  border:1px solid rgba(255,255,255,.22);
+  backdrop-filter:blur(8px);
+  color:#fff;
+  transition:transform .2s, background .2s;
+}
+.play-circle:hover{transform:scale(1.08);background:rgba(124,92,255,.75)}
+
+.hero-thumbs{
+  display:flex;gap:10px;margin-top:14px;
+}
+.thumb{
+  flex:1;position:relative;
+  aspect-ratio:16/9;
+  border-radius:9px;overflow:hidden;
+  border:2px solid transparent;
+  opacity:.5;
+  transition:opacity .2s, border-color .2s, transform .2s;
+}
+.thumb .cover{aspect-ratio:auto;position:absolute;inset:0;border-radius:0}
+.thumb:hover{opacity:.85;transform:translateY(-2px)}
+.thumb.active{opacity:1;border-color:var(--accent)}
+.thumb span{
+  position:absolute;left:7px;bottom:6px;
+  font-size:10.5px;font-weight:700;
+  color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);
+  z-index:2;
+}
+
+/* ============================================================
+   ОБЩИЕ БЛОКИ
+   ============================================================ */
+.section{padding:56px 0}
+.section-tight{padding:40px 0}
+
+.section-head{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:24px;margin-bottom:24px;flex-wrap:wrap;
+}
+.section-title{
+  font-size:clamp(20px,2.4vw,28px);
+  font-weight:750;letter-spacing:-.025em;
+  display:flex;align-items:center;gap:12px;
+}
+.section-title .mark{
+  width:4px;height:22px;border-radius:2px;
+  background:linear-gradient(180deg,var(--accent),var(--accent-2));
+}
+.section-sub{color:var(--dim);font-size:14px;margin-top:6px;max-width:56ch}
+.section-link{
+  display:flex;align-items:center;gap:7px;
+  font-size:13.5px;font-weight:600;color:var(--text-2);
+  padding:8px 14px;border-radius:9px;
+  border:1px solid var(--border-2);
+  transition:all .15s;
+}
+.section-link:hover{border-color:#3a4150;color:var(--text);gap:11px}
+
+/* ============================================================
+   КАРУСЕЛЬ
+   ============================================================ */
+.rail-wrap{position:relative;margin:0 -24px;padding:0 24px}
+.rail{
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  scroll-snap-type:x proximity;
+  padding:6px 0 14px;
+  scrollbar-width:none;
+  cursor:grab;
+  justify-content: safe center; /* ← добавлено */
+}
+.rail::-webkit-scrollbar{display:none}
+.rail.dragging{cursor:grabbing;scroll-snap-type:none}
+.rail.dragging *{pointer-events:none}
+.rail > *{scroll-snap-align:start;flex:0 0 auto}
+
+.rail-fade{
+  position:absolute;top:0;bottom:14px;width:60px;
+  pointer-events:none;z-index:2;
+}
+.rail-fade.l{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.rail-fade.r{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+
+/* ============================================================
+   КАРТОЧКА ИГРЫ
+   ============================================================ */
+.card{
+  position:relative;
+  border-radius:var(--r-lg);
+  background:var(--surface);
+  border:1px solid var(--border);
+  overflow:hidden;
+  transition:transform .25s cubic-bezier(.2,.9,.3,1), border-color .25s, box-shadow .25s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  border-color:var(--border-2);
+  box-shadow:0 18px 40px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(124,92,255,.14);
+}
+.card-cover{position:relative;overflow:hidden}
+.card-cover .cover{border-radius:0;transition:transform .5s cubic-bezier(.2,.9,.3,1)}
+.card:hover .card-cover .cover{transform:scale(1.06)}
+.card-cover::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 45%,rgba(10,11,14,.92));
+  z-index:2;pointer-events:none;
+}
+.card-body{padding:13px 14px 15px}
+.card-title{
+  font-size:14.5px;font-weight:650;letter-spacing:-.01em;
+  margin-bottom:5px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-tags{
+  display:flex;flex-wrap:wrap;gap:5px;
+  margin-bottom:10px;
+}
+.tag{
+  font-size:10.5px;font-weight:600;
+  padding:2px 7px;border-radius:5px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--dim);
+  white-space:nowrap;
+}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-price{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.card-price .old{font-size:11.5px;color:var(--muted);text-decoration:line-through;font-weight:500;margin-left:5px}
+.card-rating{
+  display:flex;align-items:center;gap:4px;
+  font-size:11.5px;color:var(--dim);font-weight:600;
+}
+.card-rating .ico{width:12px;height:12px;fill:var(--accent-4);stroke:none}
+
+/* Оверлей на обложке */
+.card-overlay{
+  position:absolute;left:10px;right:10px;bottom:10px;z-index:3;
+  display:flex;gap:6px;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .22s, transform .22s;
+}
+.card:hover .card-overlay{opacity:1;transform:translateY(0)}
+.mini-btn{
+  flex:1;height:34px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  border-radius:8px;
+  background:rgba(255,255,255,.94);
+  color:#0a0b0e;
+  font-size:12.5px;font-weight:700;
+  transition:background .15s, transform .12s;
+}
+.mini-btn:hover{background:#fff}
+.mini-btn:active{transform:scale(.96)}
+.mini-btn.ghost{
+  flex:0 0 34px;
+  background:rgba(10,11,14,.72);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.2);
+  backdrop-filter:blur(6px);
+}
+.mini-btn.ghost:hover{background:rgba(255,92,138,.7)}
+.mini-btn.ghost.active{color:var(--accent-2)}
+
+/* Бейджи на обложке */
+.cover-badge{
+  position:absolute;top:10px;left:10px;z-index:3;
+  padding:4px 9px;border-radius:6px;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;
+  background:var(--accent-3);color:#04170f;
+}
+.cover-badge.new{background:var(--accent-3);color:#04170f}
+.cover-badge.demo{background:var(--accent-4);color:#1a1005}
+.cover-badge.soon{background:var(--surface-3);color:var(--text-2);border:1px solid var(--border-2)}
+
+.card-rail{width:212px}
+
+/* ============================================================
+   ПОЛКА ДНЯ (куратор)
+   ============================================================ */
+.shelf{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:32px;
+  padding:28px;
+  border-radius:var(--r-xl);
+  background:
+    radial-gradient(600px 300px at 0% 0%, rgba(124,92,255,.14), transparent 60%),
+    linear-gradient(160deg,var(--surface) 0%, #0f1117 100%);
+  border:1px solid var(--border-2);
+}
+.curator{
+  display:flex;flex-direction:column;
+  padding-right:28px;
+  border-right:1px solid var(--border);
+}
+.curator-ava{
+  width:76px;height:76px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:26px;font-weight:800;
+  background:linear-gradient(135deg,var(--accent-2),var(--accent));
+  color:#fff;
+  margin-bottom:16px;
+  border:2px solid var(--border-2);
+  box-shadow:0 0 30px -8px var(--accent);
+}
+.curator h3{font-size:18px;font-weight:750;letter-spacing:-.02em}
+.curator .role{font-size:12.5px;color:var(--accent-3);font-weight:600;margin-top:3px;margin-bottom:16px}
+.curator blockquote{
+  margin:0;font-size:14.5px;line-height:1.6;color:var(--text-2);
+  border-left:2px solid var(--accent);
+  padding-left:14px;
+  margin-bottom:auto;
+}
+.curator .next{
+  margin-top:22px;padding-top:16px;
+  border-top:1px dashed var(--border-2);
+  font-size:12px;color:var(--muted);
+}
+.curator .next b{color:var(--text-2);font-weight:600}
+
+.shelf-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+/* ============================================================
+   ЧИПСЫ-ФИЛЬТРЫ
+   ============================================================ */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  padding:7px 15px;border-radius:99px;
+  font-size:13px;font-weight:600;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text-2);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.chip:hover{border-color:var(--border-2);color:var(--text)}
+.chip.active{
+  background:var(--text);color:#0a0b0e;border-color:var(--text);
+}
+
+/* ============================================================
+   СЕТКА НОВИНОК
+   ============================================================ */
+.grid-4{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+}
+
+/* ============================================================
+   ПОД НАСТРОЕНИЕ
+   ============================================================ */
+.moods{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+.mood{
+  position:relative;
+  padding:20px 18px 18px;
+  border-radius:var(--r-lg);
+  background:var(--surface);
+  border:1px solid var(--border);
+  overflow:hidden;
+  transition:transform .2s, border-color .2s;
+  min-height:132px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.mood::after{
+  content:"";
+  position:absolute;top:-40px;right:-40px;
+  width:130px;height:130px;border-radius:50%;
+  background:var(--mood-c,var(--accent));
+  opacity:.14;
+  filter:blur(20px);
+  transition:opacity .25s, transform .35s;
+}
+.mood:hover{transform:translateY(-3px);border-color:var(--border-2)}
+.mood:hover::after{opacity:.3;transform:scale(1.25)}
+.mood-emoji{font-size:26px;line-height:1;margin-bottom:14px}
+.mood-name{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+.mood-count{font-size:12px;color:var(--dim);position:relative;z-index:1}
+
+/* ============================================================
+   ИГРАБЕЛЬНО СЕЙЧАС
+   ============================================================ */
+.demo-band{
+  padding:32px;
+  border-radius:var(--r-xl);
+  background:
+    radial-gradient(700px 340px at 100% 0%, rgba(77,219,161,.12), transparent 60%),
+    linear-gradient(160deg,#101a16 0%, var(--surface) 100%);
+  border:1px solid #1e3a2e;
+}
+.demo-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-top:24px;
+}
+.demo-card{
+  position:relative;
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  transition:transform .2s, border-color .2s;
+}
+.demo-card:hover{transform:translateY(-4px);border-color:#2a4a3c}
+.demo-card .cover-wide{border-radius:0}
+.demo-card-body{padding:14px}
+.demo-card-body h4{font-size:14px;font-weight:650;margin-bottom:6px}
+.demo-card-body p{font-size:12.5px;color:var(--dim);line-height:1.5;margin-bottom:12px}
+.demo-btn{
+  width:100%;height:38px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:9px;
+  background:var(--accent-3);color:#04170f;
+  font-size:13px;font-weight:750;
+  transition:transform .12s, box-shadow .2s;
+}
+.demo-btn:hover{box-shadow:0 8px 22px -8px var(--accent-3)}
+.demo-btn:active{transform:scale(.97)}
+
+/* ============================================================
+   СКОРО — ТАЙМЛАЙН
+   ============================================================ */
+.timeline{
+  position:relative;
+  padding-left:26px;
+}
+.timeline::before{
+  content:"";
+  position:absolute;left:5px;top:6px;bottom:6px;
+  width:2px;
+  background:linear-gradient(180deg,var(--accent),var(--accent-2),transparent);
+  opacity:.4;
+}
+.tl-item{position:relative;margin-bottom:14px}
+.tl-item::before{
+  content:"";
+  position:absolute;left:-26px;top:22px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--bg);
+  border:2px solid var(--accent);
+  box-shadow:0 0 12px -2px var(--accent);
+}
+.tl-card{
+  display:flex;align-items:center;gap:16px;
+  padding:12px;
+  border-radius:var(--r);
+  background:var(--surface);
+  border:1px solid var(--border);
+  transition:border-color .15s, background .15s;
+}
+.tl-card:hover{border-color:var(--border-2);background:var(--surface-2)}
+.tl-cover{
+  width:80px;flex:none;
+  border-radius:9px;overflow:hidden;
+}
+.tl-cover .cover{aspect-ratio:4/3;border-radius:0}
+.tl-info{flex:1;min-width:0}
+.tl-info h4{font-size:14.5px;font-weight:650;margin-bottom:4px}
+.tl-info .meta{font-size:12px;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}
+.tl-date{
+  font-size:12px;font-weight:700;
+  padding:4px 10px;border-radius:7px;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  color:var(--accent-4);
+  white-space:nowrap;
+}
+.tl-actions{display:flex;align-items:center;gap:10px}
+.bell-btn{
+  height:36px;padding:0 14px;
+  display:flex;align-items:center;gap:7px;
+  border-radius:9px;
+  background:var(--surface-2);
+  border:1px solid var(--border-2);
+  font-size:12.5px;font-weight:650;
+  color:var(--text-2);
+  transition:all .15s;
+}
+.bell-btn:hover{border-color:var(--accent);color:var(--text)}
+.bell-btn.on{background:rgba(124,92,255,.15);border-color:var(--accent);color:var(--accent)}
+.waiting{font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+/* ============================================================
+   ИНДИ-РАДАР
+   ============================================================ */
+.radar{
+  padding:28px;
+  border-radius:var(--r-xl);
+  background:linear-gradient(160deg,#141020 0%, var(--surface) 100%);
+  border:1px solid #2a2240;
+}
+.radar-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px;
+}
+.radar-card{position:relative}
+.radar-why{
+  display:flex;align-items:flex-start;gap:7px;
+  font-size:11.5px;color:var(--accent-3);
+  margin-bottom:10px;line-height:1.4;
+}
+.radar-why .ico{width:13px;height:13px;margin-top:2px}
+.radar-dismiss{
+  position:absolute;top:8px;right:8px;z-index:5;
+  width:26px;height:26px;border-radius:7px;
+  display:grid;place-items:center;
+  background:rgba(10,11,14,.7);
+  border:1px solid var(--border-2);
+  color:var(--dim);
+  opacity:0;transition:opacity .15s, color .15s;
+}
+.radar-card:hover .radar-dismiss{opacity:1}
+.radar-dismiss:hover{color:var(--accent-2)}
+.radar-card.hide{display:none}
+
+/* ============================================================
+   ДНЕВНИКИ РАЗРАБОТКИ
+   ============================================================ */
+.devlogs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.devlog{
+  display:flex;flex-direction:column;
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  background:var(--surface);
+  border:1px solid var(--border);
+  transition:transform .2s, border-color .2s;
+}
+.devlog:hover{transform:translateY(-4px);border-color:var(--border-2)}
+.devlog-cover{position:relative;overflow:hidden}
+.devlog-cover .cover{aspect-ratio:16/9;border-radius:0}
+.devlog-body{padding:16px;display:flex;flex-direction:column;flex:1}
+.devlog-tag{
+  align-self:flex-start;
+  font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;
+  padding:3px 8px;border-radius:5px;
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--accent-4);margin-bottom:11px;
+}
+.devlog h4{font-size:15px;font-weight:650;line-height:1.35;margin-bottom:9px;letter-spacing:-.01em}
+.devlog p{font-size:13px;color:var(--dim);line-height:1.55;margin-bottom:14px}
+.devlog-foot{
+  margin-top:auto;display:flex;align-items:center;justify-content:space-between;
+  font-size:11.5px;color:var(--muted);
+  padding-top:12px;border-top:1px solid var(--border);
+}
+.devlog-author{display:flex;align-items:center;gap:8px;color:var(--text-2);font-weight:600}
+.devlog-author .dot{
+  width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+}
+
+/* ============================================================
+   CTA РАЗРАБОТЧИКАМ
+   ============================================================ */
+.cta{
+  position:relative;
+  padding:52px 40px;
+  border-radius:var(--r-xl);
+  overflow:hidden;
+  background:
+    radial-gradient(700px 400px at 85% 20%, rgba(124,92,255,.28), transparent 62%),
+    radial-gradient(500px 300px at 5% 90%, rgba(255,92,138,.18), transparent 60%),
+    linear-gradient(135deg,#141024 0%, #0c0a16 100%);
+  border:1px solid #2e2650;
+}
+.cta::after{
+  content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+}
+.cta-inner{position:relative;z-index:1;max-width:660px}
+.cta h2{
+  font-size:clamp(24px,3vw,36px);
+  font-weight:800;letter-spacing:-.03em;line-height:1.15;
+  margin-bottom:14px;
+}
+.cta h2 .grad{
+  background:linear-gradient(105deg,var(--accent-3),var(--accent));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.cta p{font-size:15.5px;color:var(--text-2);margin-bottom:26px;max-width:52ch}
+.cta-bullets{display:flex;flex-wrap:wrap;gap:12px 26px;margin-bottom:30px}
+.cta-bullet{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--text-2)}
+.cta-bullet .ico{color:var(--accent-3)}
+.cta-actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.link-arrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:14px;font-weight:600;color:var(--text-2);
+  transition:gap .15s, color .15s;
+}
+.link-arrow:hover{gap:12px;color:var(--text)}
+
+/* ============================================================
+   ОТЗЫВЫ
+   ============================================================ */
+.review{
+  width:340px;
+  padding:22px;
+  border-radius:var(--r-lg);
+  background:var(--surface);
+  border:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+.review-stars{display:flex;gap:3px;margin-bottom:14px}
+.review-stars .ico{width:14px;height:14px;fill:var(--accent-4);stroke:none}
+.review-stars .ico.off{fill:var(--border-2)}
+.review-text{font-size:14px;line-height:1.6;color:var(--text-2);margin-bottom:18px;flex:1}
+.review-author{display:flex;align-items:center;gap:11px;padding-top:16px;border-top:1px solid var(--border)}
+.review-ava{
+  width:36px;height:36px;border-radius:50%;flex:none;
+  display:grid;place-items:center;font-size:13px;font-weight:800;
+  background:var(--surface-3);color:var(--text-2);
+  border:1px solid var(--border-2);
+}
+.review-name{font-size:13px;font-weight:650}
+.review-bought{font-size:11.5px;color:var(--muted)}
+
+.rating-summary{
+  display:flex;align-items:center;gap:24px;
+  padding:20px 24px;margin-top:22px;
+  border-radius:var(--r-lg);
+  background:var(--surface);
+  border:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.rating-big{font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.rating-meta{font-size:12.5px;color:var(--dim)}
+.rating-bars{flex:1;min-width:240px;display:flex;flex-direction:column;gap:6px}
+.rating-bar{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted)}
+.rating-bar .track{flex:1;height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.rating-bar .fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+
+/* ============================================================
+   ПОДПИСКА
+   ============================================================ */
+.newsletter{
+  padding:44px 40px;
+  border-radius:var(--r-xl);
+  background:linear-gradient(135deg,var(--surface) 0%, #0f1117 100%);
+  border:1px solid var(--border-2);
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:32px;
+  align-items:center;
+}
+.newsletter h2{font-size:clamp(20px,2.4vw,26px);font-weight:750;letter-spacing:-.025em;margin-bottom:8px}
+.newsletter p{font-size:14px;color:var(--dim);max-width:46ch}
+.nl-form{display:flex;gap:10px;flex-wrap:wrap}
+.nl-input{
+  height:48px;width:290px;padding:0 16px;
+  border-radius:11px;
+  background:var(--bg-2);
+  border:1px solid var(--border-2);
+  color:var(--text);font-size:14px;
+  transition:border-color .15s, box-shadow .15s;
+}
+.nl-input::placeholder{color:var(--muted)}
+.nl-input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.14)}
+.nl-note{font-size:11.5px;color:var(--muted);margin-top:12px;grid-column:1/-1}
+.nl-done{
+  display:none;align-items:center;gap:10px;
+  font-size:14px;font-weight:600;color:var(--accent-3);
+}
+.nl-done.show{display:flex;animation:bump .5s ease}
+
+/* ============================================================
+   ФУТЕР
+   ============================================================ */
+.footer{
+  margin-top:32px;
+  padding:52px 0 0;
+  border-top:1px solid var(--border);
+  background:var(--bg-2);
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns:1.6fr repeat(4,1fr);
+  gap:32px;
+  padding-bottom:40px;
+}
+.footer-brand p{font-size:13px;color:var(--dim);margin:14px 0 18px;max-width:30ch;line-height:1.6}
+.footer-col h4{
+  font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+}
+.footer-col a{
+  display:block;font-size:13.5px;color:var(--text-2);
+  padding:5px 0;transition:color .15s;
+}
+.footer-col a:hover{color:var(--text)}
+
+.socials{display:flex;gap:8px}
+.social{
+  width:34px;height:34px;border-radius:9px;
+  display:grid;place-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--dim);
+  transition:all .15s;
+}
+.social:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+
+.footer-bottom{
+  padding:20px 0;
+  border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:14px 24px;
+  align-items:center;justify-content:space-between;
+  font-size:12.5px;color:var(--muted);
+}
+.footer-bottom-links{display:flex;flex-wrap:wrap;gap:20px}
+.footer-bottom-links a:hover{color:var(--text-2)}
+
+.theme-toggle{
+  display:flex;gap:3px;padding:3px;
+  border-radius:9px;background:var(--surface);
+  border:1px solid var(--border);
+}
+.theme-toggle button{
+  width:32px;height:28px;border-radius:6px;
+  display:grid;place-items:center;color:var(--muted);
+  transition:all .15s;
+}
+.theme-toggle button:hover{color:var(--text-2)}
+.theme-toggle button.active{background:var(--surface-3);color:var(--text)}
+
+/* ============================================================
+   МОБИЛЬНЫЙ ТАБ-БАР
+   ============================================================ */
+.tabbar{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;z-index:90;
+  height:60px;
+  background:rgba(10,11,14,.94);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabbar-inner{display:grid;grid-template-columns:repeat(5,1fr);height:60px}
+.tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:10px;font-weight:600;color:var(--muted);
+  position:relative;
+}
+.tab.active{color:var(--accent)}
+.tab .badge{top:6px;right:calc(50% - 20px)}
+
+/* ============================================================
+   МОДАЛКА ДЕМО
+   ============================================================ */
+.modal{
+  position:fixed;inset:0;z-index:200;
+  display:grid;place-items:center;
+  padding:20px;
+  background:rgba(4,5,8,.82);
+  backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;
+  transition:opacity .22s, visibility .22s;
+}
+.modal.open{opacity:1;visibility:visible}
+.modal-box{
+  width:min(880px,100%);
+  border-radius:var(--r-xl);
+  background:var(--surface);
+  border:1px solid var(--border-2);
+  overflow:hidden;
+  transform:scale(.96) translateY(10px);
+  transition:transform .28s cubic-bezier(.2,.9,.3,1.2);
+  box-shadow:0 40px 90px -30px #000;
+}
+.modal.open .modal-box{transform:scale(1) translateY(0)}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+}
+.modal-head h3{font-size:15px;font-weight:650}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;
+  display:grid;place-items:center;color:var(--dim);
+  transition:all .15s;
+}
+.modal-close:hover{background:var(--surface-2);color:var(--text)}
+.modal-screen{
+  aspect-ratio:16/9;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#0d0a1a,#0a1a14);
+  position:relative;
+  overflow:hidden;
+}
+.modal-screen .cover{position:absolute;inset:0;border-radius:0;aspect-ratio:auto;opacity:.5}
+.modal-loader{position:relative;z-index:2;text-align:center}
+.cassette{
+  width:90px;height:56px;margin:0 auto 16px;
+  border-radius:6px;
+  background:var(--surface-3);
+  border:1px solid var(--border-2);
+  position:relative;
+  animation:shake 1.6s ease-in-out infinite;
+}
+.cassette::before,.cassette::after{
+  content:"";position:absolute;top:12px;
+  width:20px;height:20px;border-radius:50%;
+  border:3px solid var(--border-2);
+}
+.cassette::before{left:14px}
+.cassette::after{right:14px}
+@keyframes shake{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.modal-loader p{font-size:13px;color:var(--dim);font-family:ui-monospace,monospace}
+.modal-foot{
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  border-top:1px solid var(--border);
+}
+.modal-foot p{font-size:12.5px;color:var(--dim)}
+
+/* Тост */
+.toast{
+  position:fixed;left:50%;bottom:80px;z-index:300;
+  transform:translate(-50%,20px);
+  padding:12px 20px;
+  border-radius:11px;
+  background:var(--surface-3);
+  border:1px solid var(--border-2);
+  font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow);
+  opacity:0;visibility:hidden;
+  transition:all .25s cubic-bezier(.2,.9,.3,1.2);
+  display:flex;align-items:center;gap:10px;
+}
+.toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.toast .ico{color:var(--accent-3)}
+
+/* ============================================================
+   АДАПТИВ
+   ============================================================ */
+@media (max-width:1180px){
+  .nav-link{padding:8px 10px;font-size:13.5px}
+  .search{max-width:260px}
+  .grid-4,.moods,.radar-grid,.demo-grid{grid-template-columns:repeat(3,1fr)}
+  .footer-grid{grid-template-columns:1.4fr repeat(4,1fr);gap:24px}
+}
+
+@media (max-width:1024px){
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .hero-visual{order:-1}
+  .hero-slides{aspect-ratio:16/9}
+  .shelf{grid-template-columns:1fr;gap:24px}
+  .curator{
+    padding-right:0;padding-bottom:22px;
+    border-right:0;border-bottom:1px solid var(--border);
+  }
+  .shelf-grid{grid-template-columns:repeat(3,1fr)}
+  .newsletter{grid-template-columns:1fr;gap:22px}
+  .nl-input{width:100%}
+  .nl-form{width:100%}
+  .nl-form .btn{width:100%}
+}
+
+@media (max-width:900px){
+  .nav,.search{display:none}
+  .burger{display:grid}
+  .header-actions{margin-left:auto}
+  .grid-4,.moods,.radar-grid,.demo-grid{grid-template-columns:repeat(2,1fr)}
+  .devlogs{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:26px}
+  .footer-brand{grid-column:1/-1}
+  .tabbar{display:block}
+  body{padding-bottom:60px}
+  .toast{bottom:76px}
+}
+
+@media (max-width:680px){
+  .wrap{padding:0 16px}
+  .rail-wrap{margin:0 -16px;padding:0 16px}
+  .section{padding:40px 0}
+  .hero{padding:32px 0 36px}
+  .hero-thumbs{gap:7px}
+  .thumb span{display:none}
+  .section-head{flex-direction:column;align-items:flex-start;gap:14px}
+  .shelf{padding:20px}
+  .shelf-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .cta{padding:34px 22px}
+  .cta-bullets{flex-direction:column;gap:10px}
+  .newsletter{padding:28px 22px}
+  .demo-band{padding:22px}
+  .radar{padding:20px}
+  .card-rail{width:160px}
+  .review{width:280px;padding:18px}
+  .rating-summary{padding:16px 18px;gap:16px}
+}
+
+@media (max-width:480px){
+  .grid-4,.moods,.radar-grid,.demo-grid{grid-template-columns:1fr 1fr;gap:11px}
+  .mood{padding:16px 14px;min-height:112px}
+  .mood-emoji{font-size:22px;margin-bottom:10px}
+  .mood-name{font-size:13.5px}
+  .mood-count{font-size:11px}
+  .footer-grid{grid-template-columns:1fr}
+  .tl-card{flex-wrap:wrap;gap:12px}
+  .tl-actions{width:100%;justify-content:space-between}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     СПРАЙТ ИКОНОК
+     ============================================================ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 1 0-7.1 7.1l8.8 8.8 8.8-8.8a5 5 0 0 0 0-7.1z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12.5a2 2 0 0 0 2 1.5h8.5a2 2 0 0 0 2-1.6L21.5 7H6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-library" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="17" rx="1"/><rect x="10" y="4" width="5" height="17" rx="1"/><path d="m17 5 3 1 3 14-3 .8"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3 6.6 7 .9-5.2 4.9 1.4 7-6.2-3.5L5.8 21.4l1.4-7L2 9.5l7-.9z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18M7 12h10M11 19h2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+</svg>
+
+<!-- ============================================================
+     ХЕДЕР
+     ============================================================ -->
+<header class="header">
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">П</span>
+      <span>ПИКСЕЛЬ</span>
+    </a>
+
+    <nav class="nav" aria-label="Главное меню">
+      <div class="has-menu">
+        <button class="nav-link" aria-haspopup="true">
+          Каталог <svg class="ico ico-sm chev"><use href="#i-chev"/></svg>
+        </button>
+        <div class="mega">
+          <div class="mega-col">
+            <h4>Жанры</h4>
+            <a href="#">Экшен и платформеры</a>
+            <a href="#">Головоломки</a>
+            <a href="#">RPG и нарратив</a>
+            <a href="#">Рогалики</a>
+            <a href="#">Метроидвании</a>
+            <a href="#">Симуляторы</a>
+          </div>
+          <div class="mega-col">
+            <h4>Настроение</h4>
+            <a href="#">На один вечер</a>
+            <a href="#">Подумать</a>
+            <a href="#">Поплакать</a>
+            <a href="#">С друзьями</a>
+            <a href="#">Уютное</a>
+            <a href="#">Жуткое</a>
+          </div>
+          <div class="mega-col">
+            <h4>Длина</h4>
+            <a href="#">До 2 часов</a>
+            <a href="#">2–10 часов</a>
+            <a href="#">10+ часов</a>
+            <a href="#">Бесконечные</a>
+            <a href="#">Сюжетные</a>
+          </div>
+          <div class="mega-col">
+            <h4>Цена и события</h4>
+            <a href="#">Новинки недели</a>
+            <a href="#">Скидки до 80%</a>
+            <a href="#">Бесплатные</a>
+            <a href="#">Демо в браузере</a>
+            <a href="#">Скоро выйдет</a>
+          </div>
+        </div>
+      </div>
+
+      <a class="nav-link" href="#shelf">Подборки</a>
+      <a class="nav-link" href="#devlogs">Дневники</a>
+      <a class="nav-link" href="#devs">Разработчикам</a>
+    </nav>
+
+    <label class="search" for="q">
+      <svg class="ico ico-sm"><use href="#i-search"/></svg>
+      <input id="q" type="search" placeholder="Найти игру, студию, тег…" autocomplete="off">
+      <kbd>⌘K</kbd>
+    </label>
+
+    <div class="header-actions">
+      <a class="icon-btn" href="#" aria-label="Библиотека">
+        <svg class="ico"><use href="#i-library"/></svg>
+        <span class="badge">3</span>
+      </a>
+      <a class="icon-btn" href="#" aria-label="Желаемое" id="wishBtn">
+        <svg class="ico"><use href="#i-heart"/></svg>
+        <span class="badge pink" id="wishCount">2</span>
+      </a>
+      <a class="icon-btn" href="#" aria-label="Корзина" id="cartBtn">
+        <svg class="ico"><use href="#i-cart"/></svg>
+        <span class="badge">1</span>
+      </a>
+      <button class="icon-btn" aria-label="Профиль">
+        <span class="avatar">АМ</span>
+      </button>
+      <button class="icon-btn burger" aria-label="Меню">
+        <svg class="ico"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="sale-strip"></div>
+</header>
+
+<main>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-grid">
+
+    <div class="hero-text">
+      <div class="hero-badge">
+        <svg class="ico ico-sm" style="color:var(--accent-4)"><use href="#i-sparkle"/></svg>
+        Выбор редакции <span class="dot"></span> сегодня
+      </div>
+
+      <h1 class="hero-title" id="heroTitle">
+        Тихий <span class="grad">маяк</span>
+      </h1>
+
+      <p class="hero-desc" id="heroDesc">
+        Смотритель одинокого маяка находит в море письма, которые никто не отправлял.
+        Нарративное приключение о памяти, потерях и свете.
+      </p>
+
+      <div class="hero-meta" id="heroMeta">
+        <span>Нарратив</span><i class="sep"></i>
+        <span>Studio Halcyon</span><i class="sep"></i>
+        <span><svg class="ico ico-sm"><use href="#i-clock"/></svg> ≈ 6 часов</span><i class="sep"></i>
+        <span>PC · Mac · Switch</span>
+      </div>
+
+      <div class="hero-price">
+        <span class="price-now" id="heroPrice">590 ₽</span>
+        <span class="price-old" id="heroOld">890 ₽</span>
+        <span class="price-min">
+          <svg class="ico ico-sm"><use href="#i-check"/></svg> минимум за всё время
+        </span>
+      </div>
+
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary">
+          <svg class="ico ico-sm"><use href="#i-cart"/></svg> Купить
+        </a>
+        <button class="btn btn-ghost" data-demo="Тихий маяк">
+          <svg class="ico ico-sm"><use href="#i-play"/></svg> Играть демо
+        </button>
+        <button class="btn-icon" aria-label="В желаемое" data-wish>
+          <svg class="ico"><use href="#i-heart"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-slides" id="heroSlides">
+        <div class="hero-slide active">
+          <div class="cover c5"></div>
+        </div>
+        <div class="hero-slide">
+          <div class="cover c2"></div>
+        </div>
+        <div class="hero-slide">
+          <div class="cover c3"></div>
+        </div>
+        <div class="hero-frame"></div>
+        <div class="hero-play">
+          <button class="play-circle" data-demo="Тихий маяк" aria-label="Смотреть трейлер">
+            <svg class="ico ico-lg"><use href="#i-play"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-thumbs" id="heroThumbs">
+        <button class="thumb active" data-slide="0" data-title="Тихий <span class='grad'>маяк</span>"
+          data-desc="Смотритель одинокого маяка находит в море письма, которые никто не отправлял. Нарративное приключение о памяти, потерях и свете."
+          data-price="590 ₽" data-old="890 ₽">
+          <div class="cover c5"></div><span>Тихий маяк</span>
+        </button>
+        <button class="thumb" data-slide="1" data-title="Ржавый <span class='grad'>ритм</span>"
+          data-desc="Ритм-экшен, где каждое попадание в такт превращает ржавый завод в неоновый город. 40 треков, 6 боссов."
+          data-price="450 ₽" data-old="700 ₽">
+          <div class="cover c2"></div><span>Ржавый ритм</span>
+        </button>
+        <button class="thumb" data-slide="2" data-title="Оран<span class='grad'>жерея</span>"
+          data-desc="Cozy-симулятор заброшенной оранжереи. Выращивайте светящиеся растения и заводите друзей среди соседей."
+          data-price="390 ₽" data-old="520 ₽">
+          <div class="cover c3"></div><span>Оранжерея</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     СЕГОДНЯ В ТОПЕ
+     ============================================================ -->
+<section class="section-tight">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Сегодня в топе</h2>
+        <p class="section-sub">20 игр, которые чаще всего покупают прямо сейчас. Без спонсорских мест.</p>
+      </div>
+      <a href="#" class="section-link">
+        Весь каталог <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="rail-wrap">
+      <div class="rail-fade l"></div>
+      <div class="rail-fade r"></div>
+      <div class="rail" data-rail>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c1"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 590 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Тихий маяк</h3>
+            <div class="card-tags"><span class="tag">Нарратив</span><span class="tag">Атмосфера</span></div>
+            <div class="card-foot">
+              <span class="card-price">590 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.8</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c2"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 450 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Ржавый ритм</h3>
+            <div class="card-tags"><span class="tag">Ритм</span><span class="tag">Экшен</span></div>
+            <div class="card-foot">
+              <span class="card-price">450 ₽<span class="old">700 ₽</span></span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c3"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 390 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Оранжерея</h3>
+            <div class="card-tags"><span class="tag">Cozy</span><span class="tag">Симулятор</span></div>
+            <div class="card-foot">
+              <span class="card-price">390 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.9</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c4"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 720 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Пепел и мёд</h3>
+            <div class="card-tags"><span class="tag">RPG</span><span class="tag">История</span></div>
+            <div class="card-foot">
+              <span class="card-price">720 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.6</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c6"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 340 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Грибная тропа</h3>
+            <div class="card-tags"><span class="tag">Пазл</span><span class="tag">Уют</span></div>
+            <div class="card-foot">
+              <span class="card-price">340 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.5</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c7"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 890 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Стеклянный город</h3>
+            <div class="card-tags"><span class="tag">Киберпанк</span><span class="tag">Детектив</span></div>
+            <div class="card-foot">
+              <span class="card-price">890 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.8</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c8"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 420 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Дом на краю карты</h3>
+            <div class="card-tags"><span class="tag">Хоррор</span><span class="tag">Пиксель</span></div>
+            <div class="card-foot">
+              <span class="card-price">420 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.4</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-rail">
+          <div class="card-cover">
+            <div class="cover c9"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить 260 ₽</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Пиксельные волны</h3>
+            <div class="card-tags"><span class="tag">Ритм</span><span class="tag">Аркада</span></div>
+            <div class="card-foot">
+              <span class="card-price">260 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.3</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>  
+  </div>
+</section>
+
+<!-- ============================================================
+     ПОЛКА ДНЯ
+     ============================================================ -->
+<section class="section" id="shelf">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Полка дня</h2>
+        <p class="section-sub">Каждую полку собирает живой человек, а не алгоритм. Сегодня — Аня.</p>
+      </div>
+    </div>
+
+    <div class="shelf">
+      <aside class="curator">
+        <div class="curator-ava">АМ</div>
+        <h3>Аня Морозова</h3>
+        <div class="role">Редактор ПИКСЕЛЯ</div>
+        <blockquote>
+          «Пять игр, после которых хочется выключить компьютер и просто посидеть в тишине.
+          Все они про одно — как оставаться человеком, когда всё вокруг рушится.»
+        </blockquote>
+        <div class="next">
+          Завтра полку собирает <b>Тимур К.</b> — стример и фанат рогаликов.
+        </div>
+      </aside>
+
+      <div class="shelf-grid">
+        <article class="card">
+          <div class="card-cover">
+            <div class="cover c5"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Тихий маяк</h3>
+            <div class="card-tags"><span class="tag">Нарратив</span></div>
+            <div class="card-foot">
+              <span class="card-price">590 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.8</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-cover">
+            <div class="cover c10"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Три письма</h3>
+            <div class="card-tags"><span class="tag">Новелла</span></div>
+            <div class="card-foot">
+              <span class="card-price">310 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-cover">
+            <div class="cover c11"></div>
+            <div class="card-overlay">
+              <button class="mini-btn">Купить</button>
+              <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Последний трамвай</h3>
+            <div class="card-tags"><span class="tag">Атмосфера</span></div>
+            <div class="card-foot">
+              <span class="card-price">480 ₽</span>
+              <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.6</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     НОВИНКИ НЕДЕЛИ
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Новинки недели</h2>
+        <p class="section-sub">8 игр, вышедших за последние 7 дней.</p>
+      </div>
+      <div class="chips" data-chips>
+        <button class="chip active">Все</button>
+        <button class="chip">Экшен</button>
+        <button class="chip">Головоломки</button>
+        <button class="chip">RPG</button>
+        <button class="chip">Хоррор</button>
+        <button class="chip">Cozy</button>
+      </div>
+    </div>
+
+    <div class="grid-4">
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c1"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 590 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Неоновый двор</h3>
+          <div class="card-tags"><span class="tag">Платформер</span><span class="tag">Экшен</span></div>
+          <div class="card-foot">
+            <span class="card-price">590 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.5</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c3"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 340 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Тихая комната</h3>
+          <div class="card-tags"><span class="tag">Головоломка</span><span class="tag">Медитация</span></div>
+          <div class="card-foot">
+            <span class="card-price">340 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c4"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 720 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Пепел и мёд</h3>
+          <div class="card-tags"><span class="tag">RPG</span><span class="tag">История</span></div>
+          <div class="card-foot">
+            <span class="card-price">720 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.6</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c8"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 420 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Дом на краю карты</h3>
+          <div class="card-tags"><span class="tag">Хоррор</span></div>
+          <div class="card-foot">
+            <span class="card-price">420 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.4</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c6"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 340 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Грибная тропа</h3>
+          <div class="card-tags"><span class="tag">Cozy</span><span class="tag">Пазл</span></div>
+          <div class="card-foot">
+            <span class="card-price">340 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.5</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c12"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 480 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Королева ржавчины</h3>
+          <div class="card-tags"><span class="tag">Метроидвания</span></div>
+          <div class="card-foot">
+            <span class="card-price">480 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.8</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c9"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 260 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Пиксельные волны</h3>
+          <div class="card-tags"><span class="tag">Ритм</span></div>
+          <div class="card-foot">
+            <span class="card-price">260 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.3</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-cover">
+          <div class="cover c10"></div>
+          <span class="cover-badge new">New</span>
+          <div class="card-overlay">
+            <button class="mini-btn">Купить 310 ₽</button>
+            <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">Три письма</h3>
+          <div class="card-tags"><span class="tag">Новелла</span></div>
+          <div class="card-foot">
+            <span class="card-price">310 ₽</span>
+            <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПОД НАСТРОЕНИЕ
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Под настроение</h2>
+        <p class="section-sub">Не знаете, какой жанр хочется? Начните с чувства.</p>
+      </div>
+    </div>
+
+    <div class="moods">
+      <a href="#" class="mood" style="--mood-c:#7c5cff">
+        <div class="mood-emoji">🌙</div>
+        <div><div class="mood-name">На один вечер</div><div class="mood-count">124 игры · до 2 часов</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#4ddba1">
+        <div class="mood-emoji">🧠</div>
+        <div><div class="mood-name">Подумать</div><div class="mood-count">89 игр · головоломки</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#5cc9ff">
+        <div class="mood-emoji">😭</div>
+        <div><div class="mood-name">Поплакать</div><div class="mood-count">57 игр · сильные истории</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#ffb454">
+        <div class="mood-emoji">🎮</div>
+        <div><div class="mood-name">С друзьями</div><div class="mood-count">73 игры · кооп</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#ff5c8a">
+        <div class="mood-emoji">⚡</div>
+        <div><div class="mood-name">Взбодриться</div><div class="mood-count">142 игры · экшен и ритм</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#4ddba1">
+        <div class="mood-emoji">🕯️</div>
+        <div><div class="mood-name">Уютное</div><div class="mood-count">96 игр · cozy</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#b07cff">
+        <div class="mood-emoji">👁️</div>
+        <div><div class="mood-name">Жуткое</div><div class="mood-count">64 игры · хоррор</div></div>
+      </a>
+      <a href="#" class="mood" style="--mood-c:#ffd05c">
+        <div class="mood-emoji">🕰️</div>
+        <div><div class="mood-name">Надолго</div><div class="mood-count">118 игр · 20+ часов</div></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ИГРАБЕЛЬНО СЕЙЧАС
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="demo-band">
+      <div class="section-head" style="margin-bottom:0">
+        <div>
+          <h2 class="section-title"><span class="mark"></span> Играбельно сейчас</h2>
+          <p class="section-sub">
+            Без установки, без регистрации. Нажмите «Играть» — откроется демо прямо в браузере, примерно на 5 минут.
+          </p>
+        </div>
+        <a href="#" class="section-link">
+          Все демо <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+        </a>
+      </div>
+
+      <div class="demo-grid">
+
+        <article class="demo-card">
+          <div class="cover cover-wide c2"></div>
+          <div class="demo-card-body">
+            <h4>Ржавый ритм</h4>
+            <p>Ритм-экшен на заброшенном заводе. 3 трека в демо.</p>
+            <button class="demo-btn" data-demo="Ржавый ритм">
+              <svg class="ico ico-sm"><use href="#i-play"/></svg> Играть · 5 мин
+            </button>
+          </div>
+        </article>
+
+        <article class="demo-card">
+          <div class="cover cover-wide c3"></div>
+          <div class="demo-card-body">
+            <h4>Оранжерея</h4>
+            <p>Первый день в заброшенной оранжерее. Посадите три семечка.</p>
+            <button class="demo-btn" data-demo="Оранжерея">
+              <svg class="ico ico-sm"><use href="#i-play"/></svg> Играть · 5 мин
+            </button>
+          </div>
+        </article>
+
+        <article class="demo-card">
+          <div class="cover cover-wide c3"></div>
+          <div class="demo-card-body">
+            <h4>Тихая комната</h4>
+            <p>Пять головоломок из полной версии. Без таймера.</p>
+            <button class="demo-btn" data-demo="Тихая комната">
+              <svg class="ico ico-sm"><use href="#i-play"/></svg> Играть · 7 мин
+            </button>
+          </div>
+        </article>
+
+        <article class="demo-card">
+          <div class="cover cover-wide c12"></div>
+          <div class="demo-card-body">
+            <h4>Королева ржавчины</h4>
+            <p>Пролог метроидвании: первый босс и карта района.</p>
+            <button class="demo-btn" data-demo="Королева ржавчины">
+              <svg class="ico ico-sm"><use href="#i-play"/></svg> Играть · 6 мин
+            </button>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     СКОРО
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Скоро</h2>
+        <p class="section-sub">Напомним в день выхода — один раз, без спама.</p>
+      </div>
+    </div>
+
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-cover"><div class="cover c7"></div></div>
+          <div class="tl-info">
+            <h4>Стеклянный город</h4>
+            <div class="meta"><span>Детектив</span><span>Glazier Studio</span><span>PC · PS5</span></div>
+          </div>
+          <div class="tl-actions">
+            <span class="waiting">ждут 1 248</span>
+            <button class="bell-btn" data-bell>
+              <svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-cover"><div class="cover c11"></div></div>
+          <div class="tl-info">
+            <h4>Последний трамвай</h4>
+            <div class="meta"><span>Атмосфера</span><span>Ночная смена</span><span>PC · Switch</span></div>
+          </div>
+          <div class="tl-actions">
+            <span class="waiting">ждут 863</span>
+            <button class="bell-btn" data-bell>
+              <svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-cover"><div class="cover c9"></div></div>
+          <div class="tl-info">
+            <h4>Пиксельные волны 2</h4>
+            <div class="meta"><span>Ритм</span><span>Wavetable</span><span>PC · Mobile</span></div>
+          </div>
+          <div class="tl-actions">
+            <span class="waiting">ждут 2 105</span>
+            <button class="bell-btn" data-bell>
+              <svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-cover"><div class="cover c1"></div></div>
+          <div class="tl-info">
+            <h4>Неоновый двор 2</h4>
+            <div class="meta"><span>Платформер</span><span>Arcade Yard</span><span>PC · Консоли</span></div>
+          </div>
+          <div class="tl-actions">
+            <span class="waiting">ждут 941</span>
+            <button class="bell-btn" data-bell>
+              <svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-cover"><div class="cover c6"></div></div>
+          <div class="tl-info">
+            <h4>Грибная тропа: осень</h4>
+            <div class="meta"><span>Cozy</span><span>Moss &amp; Co</span><span>PC</span></div>
+          </div>
+          <div class="tl-actions">
+            <span class="waiting">ждут 612</span>
+            <button class="bell-btn" data-bell>
+              <svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ИНДИ-РАДАР
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="radar">
+      <div class="section-head" style="margin-bottom:0">
+        <div>
+          <h2 class="section-title"><span class="mark"></span> Инди-радар</h2>
+          <p class="section-sub">Подобрано под вас. Если не то — нажмите ✕, и мы учтём.</p>
+        </div>
+      </div>
+
+      <div class="radar-grid">
+
+        <div class="radar-card">
+          <button class="radar-dismiss" data-dismiss aria-label="Убрать">
+            <svg class="ico ico-sm"><use href="#i-close"/></svg>
+          </button>
+          <article class="card">
+            <div class="card-cover">
+              <div class="cover c3"></div>
+              <div class="card-overlay">
+                <button class="mini-btn">Купить 390 ₽</button>
+                <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="radar-why">
+                <svg class="ico"><use href="#i-sparkle"/></svg>
+                <span>Вы играли в «Грибную тропу»</span>
+              </div>
+              <h3 class="card-title">Оранжерея</h3>
+              <div class="card-tags"><span class="tag">Cozy</span></div>
+              <div class="card-foot">
+                <span class="card-price">390 ₽</span>
+                <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.9</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="radar-card">
+          <button class="radar-dismiss" data-dismiss aria-label="Убрать">
+            <svg class="ico ico-sm"><use href="#i-close"/></svg>
+          </button>
+          <article class="card">
+            <div class="card-cover">
+              <div class="cover c12"></div>
+              <div class="card-overlay">
+                <button class="mini-btn">Купить 480 ₽</button>
+                <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="radar-why">
+                <svg class="ico"><use href="#i-sparkle"/></svg>
+                <span>Вам понравилась «Стеклянный город»</span>
+              </div>
+              <h3 class="card-title">Королева ржавчины</h3>
+              <div class="card-tags"><span class="tag">Метроидвания</span></div>
+              <div class="card-foot">
+                <span class="card-price">480 ₽</span>
+                <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.8</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="radar-card">
+          <button class="radar-dismiss" data-dismiss aria-label="Убрать">
+            <svg class="ico ico-sm"><use href="#i-close"/></svg>
+          </button>
+          <article class="card">
+            <div class="card-cover">
+              <div class="cover c10"></div>
+              <div class="card-overlay">
+                <button class="mini-btn">Купить 310 ₽</button>
+                <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="radar-why">
+                <svg class="ico"><use href="#i-sparkle"/></svg>
+                <span>Похоже на «Тихий маяк»</span>
+              </div>
+              <h3 class="card-title">Три письма</h3>
+              <div class="card-tags"><span class="tag">Новелла</span></div>
+              <div class="card-foot">
+                <span class="card-price">310 ₽</span>
+                <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="radar-card">
+          <button class="radar-dismiss" data-dismiss aria-label="Убрать">
+            <svg class="ico ico-sm"><use href="#i-close"/></svg>
+          </button>
+          <article class="card">
+            <div class="card-cover">
+              <div class="cover c2"></div>
+              <div class="card-overlay">
+                <button class="mini-btn">Купить 450 ₽</button>
+                <button class="mini-btn ghost" data-wish><svg class="ico ico-sm"><use href="#i-heart"/></svg></button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="radar-why">
+                <svg class="ico"><use href="#i-sparkle"/></svg>
+                <span>Вы любите ритм-игры</span>
+              </div>
+              <h3 class="card-title">Ржавый ритм</h3>
+              <div class="card-tags"><span class="tag">Ритм</span></div>
+              <div class="card-foot">
+                <span class="card-price">450 ₽</span>
+                <span class="card-rating"><svg class="ico"><use href="#i-star"/></svg> 4.7</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ДНЕВНИКИ РАЗРАБОТКИ
+     ============================================================ -->
+<section class="section" id="devlogs">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Дневники разработки</h2>
+        <p class="section-sub">Как игры делаются изнутри — от людей, а не от пресс-релизов.</p>
+      </div>
+      <a href="#" class="section-link">Все записи <svg class="ico ico-sm"><use href="#i-arrow"/></svg></a>
+    </div>
+
+    <div class="devlogs">
+
+      <article class="devlog">
+        <div class="devlog-cover"><div class="cover c5"></div></div>
+        <div class="devlog-body">
+          <span class="devlog-tag">Постмортем</span>
+          <h4>Как мы делали маяк: 4 года, 3 движка и один звук волн</h4>
+          <p>Честный разбор провалов и находок при разработке «Тихого маяка» — от прототипа на коленке до релиза.</p>
+          <div class="devlog-foot">
+            <span class="devlog-author"><i class="dot"></i> Studio Halcyon</span>
+            <span>12 мин чтения</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="devlog">
+        <div class="devlog-cover"><div class="cover c2"></div></div>
+        <div class="devlog-body">
+          <span class="devlog-tag">Девлог</span>
+          <h4>Ритм без нот: как мы синхронизировали удары с музыкой</h4>
+          <p>Технический дневник о том, почему наш звуковой движок трижды переписывался с нуля.</p>
+          <div class="devlog-foot">
+            <span class="devlog-author"><i class="dot"></i> Wavetable</span>
+            <span>8 мин чтения</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="devlog">
+        <div class="devlog-cover"><div class="cover c3"></div></div>
+        <div class="devlog-body">
+          <span class="devlog-tag">Арт</span>
+          <h4>Палитра для cozy: почему мы выбрали 6 цветов вместо 60</h4>
+          <p>Художница «Оранжереи» рассказывает, как ограничение палитры спасло визуал игры.</p>
+          <div class="devlog-foot">
+            <span class="devlog-author"><i class="dot"></i> Moss &amp; Co</span>
+            <span>6 мин чтения</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CTA РАЗРАБОТЧИКАМ
+     ============================================================ -->
+<section class="section" id="devs">
+  <div class="wrap">
+    <div class="cta">
+      <div class="cta-inner">
+        <h2>Выложи свою игру.<br>Забери <span class="grad">90% выручки</span>.</h2>
+        <p>Мы не берём денег за размещение и не берём долю в вашей студии. Загрузка занимает 10 минут, статистика прозрачна, модерации по знакомству нет.</p>
+
+        <div class="cta-bullets">
+          <div class="cta-bullet"><svg class="ico ico-sm"><use href="#i-check"/></svg> Загрузка за 10 минут</div>
+          <div class="cta-bullet"><svg class="ico ico-sm"><use href="#i-check"/></svg> Прозрачная статистика</div>
+          <div class="cta-bullet"><svg class="ico ico-sm"><use href="#i-check"/></svg> Без модерации по знакомству</div>
+        </div>
+
+        <div class="cta-actions">
+          <a href="#" class="btn btn-primary">
+            <svg class="ico ico-sm"><use href="#i-download"/></svg> Загрузить игру
+          </a>
+          <a href="#" class="link-arrow">
+            Как это работает <svg class="ico ico-sm"><use href="#i-arrow"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ОТЗЫВЫ СООБЩЕСТВА
+     ============================================================ -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title"><span class="mark"></span> Голоса сообщества</h2>
+        <p class="section-sub">Мы показываем и критику тоже. Так честнее.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="rail-wrap"></div>
+      <div class="rail-fade l"></div>
+      <div class="rail-fade r"></div>
+      <div class="rail" data-rail>
+
+        <div class="review">
+          <div class="review-stars">
+            <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
+          </div>
+          <p class="review-text">«Тихий маяк» — единственная игра за год, после которой я выключил компьютер и полчаса просто сидел. Это лучшее, что со мной делал инди-магазин.</p>
+          <div class="review-author">
+            <span class="review-ava">К</span>
+            <div>
+              <div class="review-name">Кирилл В.</div>
+              <div class="review-bought">Купил 24 игры на ПИКСЕЛЕ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review">
+          <div class="review-stars">
+            <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico off"><use href="#i-star"/></svg><svg class="ico off"><use href="#i-star"/></svg>
+          </div>
+          <p class="review-text">«Ржавый ритм» хорош, но во второй половине треки становятся однообразными. Первые три часа — восторг, дальше чуть скучно. Тем не менее рекомендую.</p>
+          <div class="review-author">
+            <span class="review-ava">Д</span>
+            <div>
+              <div class="review-name">Дина Р.</div>
+              <div class="review-bought">Купила 11 игр на ПИКСЕЛЕ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review">
+          <div class="review-stars">
+            <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
+          </div>
+          <p class="review-text">Демо «Оранжереи» запустилось прямо в браузере за 4 секунды. Через 5 минут я уже покупал полную версию. Так и должно работать.</p>
+          <div class="review-author">
+            <span class="review-ava">М</span>
+            <div>
+              <div class="review-name">Марк Т.</div>
+              <div class="review-bought">Купил 8 игр на ПИКСЕЛЕ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review">
+          <div class="review-stars">
+            <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico off"><use href="#i-star"/></svg>
+          </div>
+          <p class="review-text">Подборки от живых людей — то, чего не хватает большим магазинам. Я нашёл три игры, которые никогда бы не увидел в общем каталоге.</p>
+          <div class="review-author">
+            <span class="review-ava">С</span>
+            <div>
+              <div class="review-name">Соня Л.</div>
+              <div class="review-bought">Купила 17 игр на ПИКСЕЛЕ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review">
+          <div class="review-stars">
+            <svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg><svg class="ico"><use href="#i-star"/></svg>
+          </div>
+          <p class="review-text">Купил «Королеву ржавчины» по скидке, а через месяц увидел там же девлог разработчиков. Такого нигде больше нет.</p>
+          <div class="review-author">
+            <span class="review-ava">И</span>
+            <div>
+              <div class="review-name">Игорь Н.</div>
+              <div class="review-bought">Купил 31 игру на ПИКСЕЛЕ</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="rating-summary">
+        <div>
+          <div class="rating-big">4.3</div>
+          <div class="rating-meta">средняя оценка<br>1 842 игры</div>
+        </div>
+        <div class="rating-bars">
+          <div class="rating-bar"><span>5★</span><div class="track"><div class="fill" style="width:62%"></div></div><span>62%</span></div>
+          <div class="rating-bar"><span>4★</span><div class="track"><div class="fill" style="width:24%"></div></div><span>24%</span></div>
+          <div class="rating-bar"><span>3★</span><div class="track"><div class="fill" style="width:9%"></div></div><span>9%</span></div>
+          <div class="rating-bar"><span>2★</span><div class="track"><div class="fill" style="width:3%"></div></div><span>3%</span></div>
+          <div class="rating-bar"><span>1★</span><div class="track"><div class="fill" style="width:2%"></div></div><span>2%</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+      ПОДПИСКА
+      ============================================================ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="newsletter">
+        <div>
+          <h2>Письмо по пятницам</h2>
+          <p>5 игр, 1 подборка, 0 спама. Только то, что нам самим понравилось за неделю.</p>
+        </div>
+
+        <form class="nl-form" id="nlForm" novalidate>
+          <input class="nl-input" type="email" placeholder="you@example.com" required aria-label="Электронная почта">
+          <button class="btn btn-primary" type="submit">
+            <svg class="ico ico-sm"><use href="#i-send"/></svg> Подписаться
+          </button>
+          <div class="nl-done" id="nlDone">
+            <svg class="ico"><use href="#i-check"/></svg> Готово. Проверь почту.
+          </div>
+        </form>
+
+        <p class="nl-note">Отписаться можно в один клик. Обещаем не передавать адрес третьим лицам.</p>
+      </div>
+    </div> 
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     ФУТЕР
+     ============================================================ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <span class="logo-mark">П</span>
+          <span>ПИКСЕЛЬ</span>
+        </a>
+        <p>Игры выбирают люди, а не алгоритмы. Магазин инди-игр с 2021 года.</p>
+        <div class="socials">
+          <a href="#" class="social" aria-label="Telegram"><svg class="ico ico-sm"><use href="#i-send"/></svg></a>
+          <a href="#" class="social" aria-label="YouTube"><svg class="ico ico-sm"><use href="#i-play"/></svg></a>
+          <a href="#" class="social" aria-label="Discord"><svg class="ico ico-sm"><use href="#i-user"/></svg></a>
+          <a href="#" class="social" aria-label="RSS"><svg class="ico ico-sm"><use href="#i-filter"/></svg></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Каталог</h4>
+        <a href="#">Новинки</a>
+        <a href="#">Скидки</a>
+        <a href="#">Демо в браузере</a>
+        <a href="#">Скоро выйдет</a>
+        <a href="#">Бесплатные</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Разработчикам</h4>
+        <a href="#">Загрузить игру</a>
+        <a href="#">Как это работает</a>
+        <a href="#">Статистика</a>
+        <a href="#">API</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>О нас</h4>
+        <a href="#">О ПИКСЕЛЕ</a>
+        <a href="#">Кураторы</a>
+        <a href="#">Дневники</a>
+        <a href="#">Блог</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Помощь</h4>
+        <a href="#">Частые вопросы</a>
+        <a href="#">Возвраты</a>
+        <a href="#">Поддержка</a>
+        <a href="#">Статус сервиса</a>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-bottom-links">
+        <a href="#">© 2026 ПИКСЕЛЬ</a>
+        <a href="#">Условия</a>
+        <a href="#">Приватность</a>
+        <a href="#">Cookies</a>
+        <a href="#">Русский</a>
+      </div>
+
+      <div class="theme-toggle" role="group" aria-label="Тема оформления">
+        <button class="active" aria-label="Тёмная тема"><svg class="ico ico-sm"><use href="#i-moon"/></svg></button>
+        <button aria-label="Светлая тема"><svg class="ico ico-sm"><use href="#i-sun"/></svg></button>
+        <button aria-label="Системная тема"><svg class="ico ico-sm"><use href="#i-monitor"/></svg></button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     МОБИЛЬНЫЙ ТАБ-БАР
+     ============================================================ -->
+<nav class="tabbar" aria-label="Мобильная навигация">
+  <div class="tabbar-inner">
+    <a href="#" class="tab active">
+      <svg class="ico ico-sm"><use href="#i-menu"/></svg><span>Каталог</span>
+    </a>
+    <a href="#" class="tab">
+      <svg class="ico ico-sm"><use href="#i-search"/></svg><span>Поиск</span>
+    </a>
+    <a href="#" class="tab">
+      <svg class="ico ico-sm"><use href="#i-heart"/></svg><span>Желаемое</span>
+      <span class="badge pink">2</span>
+    </a>
+    <a href="#" class="tab">
+      <svg class="ico ico-sm"><use href="#i-cart"/></svg><span>Корзина</span>
+      <span class="badge">1</span>
+    </a>
+    <a href="#" class="tab">
+      <svg class="ico ico-sm"><use href="#i-user"/></svg><span>Профиль</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     МОДАЛКА ДЕМО
+     ============================================================ -->
+<div class="modal" id="demoModal" role="dialog" aria-modal="true" aria-labelledby="demoTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="demoTitle">Демо</h3>
+      <button class="modal-close" id="modalClose" aria-label="Закрыть">
+        <svg class="ico"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="modal-screen">
+      <div class="cover c2"></div>
+      <div class="modal-loader">
+        <div class="cassette"></div>
+        <p>загрузка демо…</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <p>Демо откроется в новой вкладке. Полная версия — со скидкой для тех, кто попробовал.</p>
+      <a href="#" class="btn btn-primary" style="height:40px;padding:0 18px">
+        Полная версия
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ТОСТ
+     ============================================================ -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="ico ico-sm"><use href="#i-check"/></svg>
+  <span id="toastText">Готово</span>
+</div>
+
+<script>
+/* ============================================================
+   ХЕЛПЕРЫ
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+/* ============================================================
+   ТОСТ
+   ============================================================ */
+const toastEl = $('#toast');
+const toastText = $('#toastText');
+let toastTimer;
+
+function toast(msg) {
+  toastText.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   HERO: ротация слайдов
+   ============================================================ */
+(function heroRotation() {
+  const slides = $$('.hero-slide');
+  const thumbs = $$('.thumb');
+  const titleEl = $('#heroTitle');
+  const descEl  = $('#heroDesc');
+  const priceEl = $('#heroPrice');
+  const oldEl   = $('#heroOld');
+  if (!slides.length) return;
+
+  let current = 0;
+  let timer;
+
+  function show(i) {
+    if (i === current) return;
+    slides[current].classList.remove('active');
+    thumbs[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    thumbs[current].classList.add('active');
+
+    const t = thumbs[current];
+    titleEl.innerHTML = t.dataset.title;
+    descEl.textContent = t.dataset.desc;
+    priceEl.textContent = t.dataset.price;
+    oldEl.textContent = t.dataset.old || '';
+  }
+
+  function next() { show((current + 1) % slides.length); }
+  function start() { clearInterval(timer); timer = setInterval(next, 8000); }
+  function stop()  { clearInterval(timer); }
+
+  thumbs.forEach(t => {
+    t.addEventListener('click', () => {
+      show(Number(t.dataset.slide));
+      start();
+    });
+    t.addEventListener('mouseenter', stop);
+    t.addEventListener('mouseleave', start);
+  });
+
+  // Пауза при наведении на hero-visual
+  const visual = $('.hero-visual');
+  if (visual) {
+    visual.addEventListener('mouseenter', stop);
+    visual.addEventListener('mouseleave', start);
+  }
+
+  start();
+})();
+
+/* ============================================================
+   ГОРИЗОНТАЛЬНЫЕ КАРУСЕЛИ: drag-to-scroll
+   ============================================================ */
+$$('[data-rail]').forEach(rail => {
+  let down = false, startX = 0, startScroll = 0, moved = false;
+
+  rail.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return; // тач скроллит нативно
+    down = true;
+    moved = false;
+    startX = e.clientX;
+    startScroll = rail.scrollLeft;
+    rail.classList.add('dragging');
+    rail.setPointerCapture(e.pointerId);
+  });
+
+  rail.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    rail.scrollLeft = startScroll - dx;
+  });
+
+  function end(e) {
+    if (!down) return;
+    down = false;
+    rail.classList.remove('dragging');
+    try { rail.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  rail.addEventListener('pointerup', end);
+  rail.addEventListener('pointercancel', end);
+  rail.addEventListener('pointerleave', end);
+
+  // Блокируем клик по карточке, если это было перетаскивание
+  rail.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+});
+
+/* ============================================================
+   ЖЕЛАЕМОЕ
+   ============================================================ */
+(function wishlist() {
+  let count = 2;
+  const badge = $('#wishCount');
+  const heartFill = { fill: 'currentColor' };
+
+  $$('[data-wish]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const on = btn.classList.toggle('active');
+      const svg = btn.querySelector('.ico');
+      if (svg) svg.style.fill = on ? heartFill.fill : '';
+
+      count = Math.max(0, count + (on ? 1 : -1));
+      badge.textContent = count;
+      badge.style.display = count ? '' : 'none';
+
+      btn.classList.remove('bump');
+      void btn.offsetWidth;
+      btn.classList.add('bump');
+
+      toast(on ? 'Добавлено в желаемое' : 'Убрано из желаемого');
+    });
+  });
+})();
+
+/* ============================================================
+   КОРЗИНА — микро-анимация
+   ============================================================ */
+$$('.mini-btn:not(.ghost)').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const cart = $('#cartBtn');
+    cart.classList.remove('bump');
+    void cart.offsetWidth;
+    cart.classList.add('bump');
+    const badge = cart.querySelector('.badge');
+    badge.textContent = Number(badge.textContent) + 1;
+    toast('Добавлено в корзину');
+  });
+});
+
+/* ============================================================
+   ЧИПСЫ — переключение
+   ============================================================ */
+$$('[data-chips]').forEach(group => {
+  group.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    $$('.chip', group).forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+/* ============================================================
+   МОДАЛКА ДЕМО
+   ============================================================ */
+(function demoModal() {
+  const modal = $('#demoModal');
+  const title = $('#demoTitle');
+  const close = $('#modalClose');
+
+  function open(name) {
+    title.textContent = 'Демо: ' + name;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function hide() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  $$('[data-demo]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      open(btn.dataset.demo || 'Игра');
+    });
+  });
+
+  close.addEventListener('click', hide);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) hide();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) hide();
+  });
+})();
+
+/* ============================================================
+   ИНДИ-РАДАР — убрать карточку
+   ============================================================ */
+$$('[data-dismiss]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const card = btn.closest('.radar-card');
+    card.style.transition = 'opacity .25s, transform .25s';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(.94)';
+    setTimeout(() => card.classList.add('hide'), 250);
+    toast('Понятно, учтём');
+  });
+});
+
+/* ============================================================
+   НАПОМИНАНИЯ
+   ============================================================ */
+$$('[data-bell]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const on = btn.classList.toggle('on');
+    btn.innerHTML = on
+      ? '<svg class="ico ico-sm"><use href="#i-check"/></svg> Напомним'
+      : '<svg class="ico ico-sm"><use href="#i-bell"/></svg> Напомнить';
+    toast(on ? 'Напомним в день выхода' : 'Напоминание отключено');
+  });
+});
+
+/* ============================================================
+   ПОДПИСКА
+   ============================================================ */
+$('#nlForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = e.target.querySelector('.nl-input');
+  const done  = $('#nlDone');
+
+  if (!input.value || !input.checkValidity()) {
+    input.style.borderColor = 'var(--accent-2)';
+    input.focus();
+    setTimeout(() => input.style.borderColor = '', 1200);
+    return;
+  }
+
+  input.style.display = 'none';
+  e.target.querySelector('.btn').style.display = 'none';
+  done.classList.add('show');
+});
+
+/* ============================================================
+   ГОРЯЧАЯ КЛАВИША ПОИСКА
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    $('#q')?.focus();
+  }
+});
+
+/* ============================================================
+   ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (визуальный отклик)
+   ============================================================ */
+$$('.theme-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.theme-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    toast('Тема сохранена');
+  });
+});
+</script>
+
+</body>
+</html>

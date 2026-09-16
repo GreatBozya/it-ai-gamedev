@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Таблица лута</title>
+<style>
+  :root{
+    --bg:#0e1013;
+    --surface:#15181d;
+    --surface-2:#1b2028;
+    --border:#262b33;
+    --border-soft:#1c2027;
+    --text:#e6e8ec;
+    --text-dim:#a9b1bd;
+    --muted:#8b93a1;
+    --icon:#aab3c0;
+    --radius:16px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+
+  body{
+    margin:0;
+    padding:32px 16px 72px;
+    background:
+      radial-gradient(1100px 520px at 50% -12%, #1a2028 0%, rgba(14,16,19,0) 62%),
+      var(--bg);
+    color:var(--text);
+    font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                "Helvetica Neue", Arial, sans-serif;
+    font-size:15px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:1180px;margin:0 auto}
+
+  /* ---------- Шапка ---------- */
+  .head{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px 24px;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:22px;
+  }
+  h1{margin:0 0 4px;font-size:22px;letter-spacing:-.015em;font-weight:650}
+  .sub{margin:0;color:var(--muted);font-size:13.5px}
+
+  .search{
+    display:flex;align-items:center;gap:10px;
+    height:42px;padding:0 13px;
+    min-width:260px;
+    background:#151a20;
+    border:1px solid var(--border);
+    border-radius:11px;
+    color:var(--muted);
+    transition:border-color .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .search:focus-within{
+    border-color:#3a444f;
+    box-shadow:0 0 0 3px rgba(120,140,170,.10);
+  }
+  .search[aria-disabled="true"]{opacity:.5;pointer-events:none}
+  .search input{
+    width:100%;height:100%;
+    background:none;border:0;outline:0;
+    color:var(--text);font:inherit;
+  }
+  .search input::placeholder{color:#6a7381}
+  .search input::-webkit-search-cancel-button{-webkit-appearance:none}
+
+  /* ---------- Иконки ---------- */
+  .ico{
+    width:20px;height:20px;
+    display:block;flex:none;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  /* ---------- Контейнер таблицы ---------- */
+  .table-wrap{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:linear-gradient(180deg,#14171c 0%, #101317 100%);
+    overflow:hidden;
+  }
+
+  table{width:100%;border-collapse:collapse}
+
+  thead th{
+    padding:14px 16px;
+    text-align:left;
+    font-size:11.5px;
+    font-weight:650;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--muted);
+    background:#12151a;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+
+  tbody td{
+    padding:14px 16px;
+    border-bottom:1px solid var(--border-soft);
+    vertical-align:top;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{transition:background .15s ease}
+  tbody tr:hover{background:#171b21}
+
+  /* ---------- Ячейка «Предмет» ---------- */
+  .item{display:flex;align-items:center;gap:12px;min-width:190px}
+  .icon{
+    width:38px;height:38px;flex:none;
+    display:grid;place-items:center;
+    border-radius:11px;
+    background:var(--surface-2);
+    border:1px solid #272e38;
+    color:var(--icon);
+  }
+  .item-text{display:flex;flex-direction:column;min-width:0}
+  .item-name{font-weight:600;letter-spacing:-.005em}
+  .item-id{
+    font-size:11.5px;color:#727b89;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  /* ---------- Бейдж редкости ---------- */
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12.5px;font-weight:600;
+    white-space:nowrap;
+    color:var(--rc);
+    background:var(--rbg);
+    border:1px solid var(--rbd);
+  }
+  .badge::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:currentColor;
+  }
+
+  .r-common   {--rc:#98a1ae;--rbg:#181c22;--rbd:#2c323b}
+  .r-uncommon {--rc:#5fd39a;--rbg:#132a20;--rbd:#22503a}
+  .r-rare     {--rc:#5aa9ff;--rbg:#111f30;--rbd:#1f3f66}
+  .r-epic     {--rc:#b07cff;--rbg:#1c1430;--rbd:#3d2a63}
+  .r-legendary{--rc:#ffb454;--rbg:#291c0d;--rbd:#5c3f18}
+
+  /* ---------- Числовые колонки ---------- */
+  .num{
+    text-align:right;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+    color:#c6ccd6;
+  }
+
+  /* ---------- Колонка «Свойства» ---------- */
+  .desc{
+    margin:0 0 9px;
+    max-width:430px;
+    font-size:13.5px;
+    color:var(--text-dim);
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
+    padding:3px 8px;
+    border-radius:7px;
+    font-size:11.5px;
+    color:#9aa4b2;
+    background:#181c22;
+    border:1px solid #262c35;
+    white-space:nowrap;
+  }
+  .chip b{color:#ced4de;font-weight:600}
+
+  /* ---------- Служебные состояния ---------- */
+  .state-row td{
+    padding:44px 16px;
+    text-align:center;
+    color:var(--muted);
+  }
+  .state-title{font-weight:600;color:var(--text);margin-bottom:6px}
+  .state-hint{
+    font-size:13px;
+    max-width:520px;
+    margin:8px auto 0;
+    line-height:1.55;
+  }
+  .state-hint code{
+    padding:1px 6px;border-radius:6px;
+    background:#181c22;border:1px solid #262c35;
+    font-size:12.5px;color:#c6ccd6;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  .spinner{
+    width:22px;height:22px;margin:0 auto 12px;
+    border-radius:50%;
+    border:2px solid #2a3038;
+    border-top-color:#8b93a1;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ================= АДАПТИВ ================= */
+  @media (max-width: 900px){
+    body{padding:22px 12px 56px}
+    .search{min-width:0;width:100%}
+
+    .table-wrap{
+      border:0;border-radius:0;background:none;overflow:visible;
+    }
+
+    table, thead, tbody, tr, td{display:block}
+    thead{
+      position:absolute;width:1px;height:1px;
+      overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+    }
+
+    tbody tr{
+      position:relative;
+      padding:14px 15px 15px 18px;
+      margin-bottom:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:linear-gradient(180deg,#151a20 0%, #12161b 100%);
+    }
+    tbody tr:hover{background:linear-gradient(180deg,#171d24 0%, #131820 100%)}
+
+    tbody tr::before{
+      content:"";
+      position:absolute;
+      left:0;top:14px;bottom:14px;
+      width:3px;
+      border-radius:0 3px 3px 0;
+      background:var(--rc, #2a303a);
+      opacity:.85;
+    }
+
+    tbody td{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      padding:9px 0;
+      border-bottom:1px dashed #21262e;
+    }
+    tbody td:last-child{border-bottom:0;padding-bottom:0}
+
+    tbody td::before{
+      content:attr(data-label);
+      flex:none;
+      padding-top:1px;
+      font-size:11px;
+      font-weight:650;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    td.cell-item{
+      display:block;
+      padding:0 0 12px;
+      margin-bottom:2px;
+      border-bottom:1px solid #21262e;
+    }
+    td.cell-item::before{display:none}
+    td.cell-item .item{min-width:0;width:100%}
+
+    .num{text-align:right}
+
+    td.cell-props{flex-direction:column;align-items:stretch;gap:8px}
+    td.cell-props::before{padding-top:0}
+    .desc{max-width:none}
+
+    .state-row td{display:block;padding:32px 12px}
+    .state-row td::before{display:none}
+  }
+
+  @media (max-width: 420px){
+    .icon{width:34px;height:34px;border-radius:10px}
+    .ico{width:18px;height:18px}
+    .item-name{font-size:14.5px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Спрайт иконок ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sword" viewBox="0 0 24 24">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+    <line x1="13" y1="19" x2="19" y2="13"/>
+    <line x1="16" y1="16" x2="20" y2="20"/>
+    <line x1="19" y1="21" x2="21" y2="19"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24">
+    <path d="M10 2v7.31"/>
+    <path d="M14 9.3V1.99"/>
+    <path d="M8.5 2h7"/>
+    <path d="M14 9.3a6.5 6.5 0 1 1-4 0"/>
+    <path d="M5.52 16h12.96"/>
+  </symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+  </symbol>
+  <symbol id="i-ring" viewBox="0 0 24 24">
+    <circle cx="12" cy="14.5" r="6"/>
+    <path d="m9 8.5 3-5.5 3 5.5"/>
+  </symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24">
+    <path d="M19 17V5a2 2 0 0 0-2-2H4"/>
+    <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>
+  </symbol>
+  <symbol id="i-amulet" viewBox="0 0 24 24">
+    <path d="M5 4c0 4.5 3.1 7 7 7s7-2.5 7-7"/>
+    <circle cx="12" cy="16.5" r="4.5"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+  </symbol>
+  <symbol id="i-gem" viewBox="0 0 24 24">
+    <path d="M6 3h12l4 6-10 12L2 9z"/>
+    <path d="M11 3 8 9l4 12 4-12-3-6"/>
+    <path d="M2 9h20"/>
+  </symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24">
+    <path d="m3 7 4.5 4.5L12 4l4.5 7.5L21 7l-2 11H5L3 7z"/>
+  </symbol>
+  <symbol id="i-box" viewBox="0 0 24 24">
+    <path d="m21 8-9-5-9 5 9 5 9-5z"/>
+    <path d="M3 8v8l9 5 9-5V8"/>
+    <path d="M12 13v8"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="7"/>
+    <path d="m21 21-4.3-4.3"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+    <polyline points="21 3 21 9 15 9"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <h1>Таблица лута</h1>
+      <p class="sub" id="subtitle">Загрузка…</p>
+    </div>
+
+    <label class="search" id="searchBox" aria-disabled="true">
+      <svg class="ico" aria-hidden="true"><use href="#i-search"></use></svg>
+      <input id="q" type="search" placeholder="Поиск по названию, типу, id…" autocomplete="off" disabled>
+    </label>
+  </header>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Предмет</th>
+          <th scope="col">Тип</th>
+          <th scope="col">Редкость</th>
+          <th scope="col" class="num">Стоимость</th>
+          <th scope="col" class="num">Вес</th>
+          <th scope="col">Свойства</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   СЛОВАРИ
+   ============================================================ */
+const TYPE_ICON = {
+  "Оружие":"i-sword", "Броня":"i-shield", "Зелье":"i-flask",
+  "Ресурс":"i-flame", "Кольцо":"i-ring", "Свиток":"i-scroll",
+  "Амулет":"i-amulet", "Книга":"i-book", "Материал":"i-gem",
+  "Аксессуар":"i-crown"
+};
+
+const RARITY_CLASS = {
+  "Обычный":"r-common", "Необычный":"r-uncommon", "Редкий":"r-rare",
+  "Эпический":"r-epic", "Легендарный":"r-legendary"
+};
+
+const PROP_NAME = {
+  damage:"Урон", attribute:"Атрибут", armor:"Броня", slot:"Слот",
+  effect:"Эффект", duration:"Длительность", quantity:"Количество",
+  light_radius:"Радиус света", armor_bonus:"Бонус брони", spell:"Заклинание",
+  level:"Уровень", uses:"Использований", bonus:"Бонус",
+  strength_requirement:"Треб. Сила", charges:"Заряды",
+  dexterity_bonus:"Бонус Ловкости", skill:"Навык", language:"Язык",
+  resource:"Ресурс", capacity:"Ёмкость", bonus_damage:"Доп. урон",
+  spell_bonus:"Бонус к магии", crafting:"Крафт",
+  rarity_material:"Редкость материала", charisma_bonus:"Бонус Харизмы",
+  aura:"Аура", special:"Особое", save_bonus:"Бонус спасброска"
+};
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+const esc = (s) => String(s).replace(/[&<>"']/g, c => (
+  {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
+));
+const fmtInt    = (n) => new Intl.NumberFormat("ru-RU").format(n);
+const fmtWeight = (n) => String(n).replace(".", ",") + " кг";
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+let LOOT = [];                       // сюда сложим данные из loots.json
+const tbody      = document.getElementById("tbody");
+const subtitle   = document.getElementById("subtitle");
+const searchInput= document.getElementById("q");
+const searchBox  = document.getElementById("searchBox");
+
+/* ============================================================
+   ПАРСИНГ loots.json
+   ============================================================ */
+async function loadLoot(url = "loots.json") {
+  showLoading();
+
+  let res;
+  try {
+    res = await fetch(url, { cache: "no-store" });
+  } catch (err) {
+    // Сюда попадаем, если страница открыта через file:// (CORS)
+    // или файл недоступен по сети.
+    showError(
+      "Не удалось загрузить файл",
+      `Убедитесь, что <code>loots.json</code> лежит рядом с этой страницей, и откройте её через локальный веб-сервер, например:
+       <code>npx serve .</code> или <code>python -m http.server</code>.
+       Открытие по <code>file://</code> блокирует <code>fetch()</code> в браузере.`,
+      err
+    );
+    return;
+  }
+
+  if (!res.ok) {
+    showError(
+      "Не удалось загрузить файл",
+      `Сервер вернул статус <code>${res.status} ${res.statusText}</code> для <code>${esc(url)}</code>.`
+    );
+    return;
+  }
+
+  // Читаем как текст и явно парсим JSON — так ошибки парсинга
+  // ловятся отдельно от сетевых ошибок.
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    showError(
+      "Ошибка парсинга JSON",
+      `Файл <code>${esc(url)}</code> содержит некорректный JSON: <code>${esc(err.message)}</code>`
+    );
+    return;
+  }
+
+  // Поддерживаем два формата: { "loot": [...] } и просто [...]
+  const list = Array.isArray(data) ? data
+             : Array.isArray(data?.loot) ? data.loot
+             : null;
+
+  if (!list) {
+    showError(
+      "Неверная структура файла",
+      `Ожидался массив или объект вида <code>{ "loot": [ ... ] }</code>, но получено: <code>${esc(typeof data)}</code>.`
+    );
+    return;
+  }
+
+  // Мягкая валидация записей — пропускаем мусор без падения рендера
+  LOOT = list.filter(it => it && typeof it === "object" && it.name);
+
+  if (!LOOT.length) {
+    showError("Список пуст", "В файле нет ни одной корректной записи о предмете.");
+    return;
+  }
+
+  enableSearch(true);
+  applyFilter();
+}
+
+/* ============================================================
+   СОСТОЯНИЯ UI
+   ============================================================ */
+function showLoading() {
+  enableSearch(false);
+  subtitle.textContent = "Загрузка…";
+  tbody.innerHTML = `
+    <tr class="state-row">
+      <td colspan="6">
+        <div class="spinner" aria-hidden="true"></div>
+        Загружаем loots.json…
+      </td>
+    </tr>`;
+}
+
+function showError(title, hintHTML, err) {
+  if (err) console.error(err);
+  enableSearch(false);
+  subtitle.textContent = "Ошибка загрузки";
+  tbody.innerHTML = `
+    <tr class="state-row">
+      <td colspan="6">
+        <div class="state-title">${esc(title)}</div>
+        <div class="state-hint">${hintHTML}</div>
+      </td>
+    </tr>`;
+}
+
+function enableSearch(on) {
+  searchInput.disabled = !on;
+  searchBox.setAttribute("aria-disabled", String(!on));
+}
+
+/* ============================================================
+   РЕНДЕР
+   ============================================================ */
+function rowHTML(item) {
+  const rarClass = RARITY_CLASS[item.rarity] || "r-common";
+  const iconId   = TYPE_ICON[item.type]   || "i-box";
+
+  const chips = Object.entries(item.properties || {})
+    .map(([k, v]) =>
+      `<span class="chip"><b>${esc(PROP_NAME[k] || k)}:</b> ${esc(v)}</span>`
+    ).join("");
+
+  return `
+    <tr class="${rarClass}">
+      <td class="cell-item" data-label="Предмет">
+        <div class="item">
+          <span class="icon">
+            <svg class="ico" aria-hidden="true"><use href="#${iconId}"></use></svg>
+          </span>
+          <span class="item-text">
+            <span class="item-name">${esc(item.name)}</span>
+            <span class="item-id">${esc(item.id ?? "—")}</span>
+          </span>
+        </div>
+      </td>
+      <td data-label="Тип">${esc(item.type ?? "—")}</td>
+      <td data-label="Редкость">
+        <span class="badge ${rarClass}">${esc(item.rarity ?? "—")}</span>
+      </td>
+      <td class="num" data-label="Стоимость">${
+        Number.isFinite(item.value) ? fmtInt(item.value) + " з." : "—"
+      }</td>
+      <td class="num" data-label="Вес">${
+        Number.isFinite(item.weight) ? fmtWeight(item.weight) : "—"
+      }</td>
+      <td class="cell-props" data-label="Свойства">
+        <p class="desc">${esc(item.description ?? "")}</p>
+        <div class="chips">${chips}</div>
+      </td>
+    </tr>`;
+}
+
+function render(list) {
+  if (!list.length) {
+    tbody.innerHTML = `
+      <tr class="state-row">
+        <td colspan="6">Ничего не найдено</td>
+      </tr>`;
+  } else {
+    tbody.innerHTML = list.map(rowHTML).join("");
+  }
+
+  subtitle.textContent =
+    list.length === LOOT.length
+      ? `${LOOT.length} предметов · тёмная тема`
+      : `Показано ${list.length} из ${LOOT.length}`;
+}
+
+/* ============================================================
+   ПОИСК
+   ============================================================ */
+function applyFilter() {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) return render(LOOT);
+
+  render(LOOT.filter(it => {
+    const haystack = [
+      it.name, it.type, it.rarity, it.id, it.description,
+      ...Object.keys(it.properties || {}),
+      ...Object.values(it.properties || {})
+    ].join(" ").toLowerCase();
+    return haystack.includes(q);
+  }));
+}
+
+searchInput.addEventListener("input", applyFilter);
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+loadLoot("loots.json");
+</script>
+</body>
+</html>
