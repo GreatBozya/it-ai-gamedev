@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Stack Tower — Three.js</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #0d1119;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  canvas { display: block; }
+
+  #hud {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: max(26px, env(safe-area-inset-top));
+    z-index: 10;
+  }
+
+  #score {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: #ffffff;
+    text-shadow: 0 6px 30px rgba(0, 0, 0, .65);
+  }
+
+  #perfect {
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    color: #ffd166;
+    text-shadow: 0 0 22px rgba(255, 209, 102, .7);
+    opacity: 0;
+    transition: opacity .22s ease;
+  }
+
+  #hint {
+    position: fixed;
+    left: 0; right: 0; bottom: 13%;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, .6);
+    pointer-events: none;
+    z-index: 10;
+    animation: pulse 1.9s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: .25; }
+    50%      { opacity: .9; }
+  }
+
+  #overlay {
+    position: fixed; inset: 0;
+    z-index: 20;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #fff;
+    background: rgba(8, 11, 18, .8);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+  }
+
+  #overlay.show { opacity: 1; pointer-events: auto; }
+
+  #overlay h1 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 7px;
+    color: #ff6b6b;
+    text-shadow: 0 0 34px rgba(255, 107, 107, .5);
+    margin-bottom: 22px;
+  }
+
+  .big {
+    font-size: 78px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -3px;
+  }
+
+  .label {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, .42);
+  }
+
+  .bestWrap { margin-top: 22px; text-align: center; }
+  .bestWrap .big { font-size: 30px; letter-spacing: -1px; color: #ffd166; }
+
+  #restart {
+    margin-top: 44px;
+    padding: 16px 46px;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #05121f;
+    background: linear-gradient(135deg, #5eead4, #3b82f6);
+    box-shadow: 0 12px 34px rgba(59, 130, 246, .45);
+    cursor: pointer;
+    transition: transform .12s ease;
+  }
+
+  #restart:active { transform: scale(.95); }
+
+  #vignette {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background: radial-gradient(ellipse at 50% 45%,
+                rgba(0, 0, 0, 0) 35%,
+                rgba(0, 0, 0, .55) 100%);
+  }
+</style>
+</head>
+<body>
+
+  <div id="hud">
+    <div id="score">0</div>
+    <div id="perfect">PERFECT!</div>
+  </div>
+
+  <div id="hint">TAP TO STACK</div>
+
+  <div id="overlay">
+    <h1>GAME OVER</h1>
+    <div class="big" id="finalScore">0</div>
+    <div class="label">SCORE</div>
+    <div class="bestWrap">
+      <div class="big" id="bestScore">0</div>
+      <div class="label">BEST</div>
+    </div>
+    <button id="restart">PLAY AGAIN</button>
+  </div>
+
+  <div id="vignette"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+
+  /* ============================================================
+     CONFIG
+     ============================================================ */
+  const BOX_H       = 0.5;
+  const BASE_SIZE   = 2;
+  const RANGE       = 3.6;
+  const PERFECT_TOL = 0.1;
+  const START_SPEED = 2.6;
+  const SPEED_STEP  = 0.075;
+  const MAX_SPEED   = 7.5;
+  const GRAVITY     = 24;
+
+  /* ============================================================
+     RENDERER
+     ============================================================ */
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+  const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
+
+  /* ============================================================
+     TEXTURES  (procedurally painted on <canvas>)
+     ------------------------------------------------------------
+     Three separate textures:  TOP / BOTTOM / SIDE.
+     BoxGeometry material order:  +X, -X, +Y, -Y, +Z, -Z
+     ============================================================ */
+  const TEX_SIZE = 256;
+
+  function makeCanvas() {
+    const c = document.createElement('canvas');
+    c.width = c.height = TEX_SIZE;
+    return c;
+  }
+
+  /* ---------- TOP ---------- */
+  function paintTop() {
+    const c = makeCanvas();
+    const ctx = c.getContext('2d');
+    const s = TEX_SIZE;
+
+    const g = ctx.createRadialGradient(s * 0.5, s * 0.5, s * 0.04, s * 0.5, s * 0.5, s * 0.74);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.6, '#eeeeee');
+    g.addColorStop(1, '#d4d4d4');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = s * 0.022;
+    ctx.strokeRect(s * 0.035, s * 0.035, s * 0.93, s * 0.93);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.17)';
+    ctx.lineWidth = s * 0.045;
+    ctx.strokeRect(s * 0.10, s * 0.10, s * 0.80, s * 0.80);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.09)';
+    ctx.lineWidth = s * 0.013;
+    ctx.strokeRect(s * 0.38, s * 0.38, s * 0.24, s * 0.24);
+
+    // Asymmetric "L" marker so horizontal slicing is clearly visible
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.fillRect(s * 0.14, s * 0.42, s * 0.05, s * 0.30);
+    ctx.fillRect(s * 0.14, s * 0.42, s * 0.28, s * 0.05);
+
+    // corner studs
+    ctx.fillStyle = 'rgba(0,0,0,0.13)';
+    const r = s * 0.022, o = s * 0.055;
+    for (const [x, y] of [[o, o], [s - o, o], [o, s - o], [s - o, s - o]]) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    return c;
+  }
+
+  /* ---------- BOTTOM ---------- */
+  function paintBottom() {
+    const c = makeCanvas();
+    const ctx = c.getContext('2d');
+    const s = TEX_SIZE;
+
+    const g = ctx.createLinearGradient(0, 0, s, s);
+    g.addColorStop(0, '#b6b6b6');
+    g.addColorStop(1, '#8e8e8e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.24)';
+    ctx.lineWidth = s * 0.05;
+    ctx.strokeRect(s * 0.11, s * 0.11, s * 0.78, s * 0.78);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.11)';
+    ctx.lineWidth = s * 0.024;
+    ctx.beginPath();
+    ctx.moveTo(s * 0.11, s * 0.11); ctx.lineTo(s * 0.89, s * 0.89);
+    ctx.moveTo(s * 0.89, s * 0.11); ctx.lineTo(s * 0.11, s * 0.89);
+    ctx.stroke();
+
+    // asymmetric marker
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(s * 0.62, s * 0.20, s * 0.20, s * 0.05);
+
+    const v = ctx.createRadialGradient(s * 0.5, s * 0.5, s * 0.18, s * 0.5, s * 0.5, s * 0.78);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(0,0,0,0.22)');
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, s, s);
+
+    return c;
+  }
+
+  /* ---------- SIDE ---------- */
+  function paintSide() {
+    const c = makeCanvas();
+    const ctx = c.getContext('2d');
+    const s = TEX_SIZE;
+
+    const g = ctx.createLinearGradient(0, 0, 0, s);
+    g.addColorStop(0.00, '#fbfbfb');
+    g.addColorStop(0.18, '#ededed');
+    g.addColorStop(0.62, '#dedede');
+    g.addColorStop(1.00, '#bdbdbd');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+
+    // horizontal panel seams
+    const seams = [0.32, 0.64, 0.90];
+    for (const b of seams) {
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillRect(0, s * b - s * 0.016, s, s * 0.013);
+      ctx.fillStyle = 'rgba(0,0,0,0.13)';
+      ctx.fillRect(0, s * b, s, s * 0.020);
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillRect(0, 0, s, s * 0.035);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.14)';
+    ctx.fillRect(0, s * 0.965, s, s * 0.035);
+
+    // Asymmetric "L" marker — clearly shows horizontal slicing
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(s * 0.13, s * 0.40, s * 0.055, s * 0.32);
+    ctx.fillRect(s * 0.13, s * 0.40, s * 0.30, s * 0.055);
+
+    // edge shading
+    const edge = ctx.createLinearGradient(0, 0, s, 0);
+    edge.addColorStop(0.00, 'rgba(0,0,0,0.16)');
+    edge.addColorStop(0.10, 'rgba(0,0,0,0)');
+    edge.addColorStop(0.90, 'rgba(0,0,0,0)');
+    edge.addColorStop(1.00, 'rgba(0,0,0,0.16)');
+    ctx.fillStyle = edge;
+    ctx.fillRect(0, 0, s, s);
+
+    return c;
+  }
+
+  function toTexture(canvas) {
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = MAX_ANISO;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  const TOP_TEX    = toTexture(paintTop());
+  const BOTTOM_TEX = toTexture(paintBottom());
+  const SIDE_TEX   = toTexture(paintSide());
+
+  /* ============================================================
+     SCENE / CAMERA
+     ============================================================ */
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1119);
+
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 300);
+  const CAM_OFF  = new THREE.Vector3(4.8, 6.4, 4.8);
+  const CAM_LEAD = 0.6;
+  let focusY = -CAM_LEAD;
+
+  camera.position.set(CAM_OFF.x, CAM_OFF.y, CAM_OFF.z);
+  camera.lookAt(0, 0, 0);
+
+  /* ============================================================
+     LIGHTS
+     ============================================================ */
+  scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x1b2230, 1.2));
+
+  const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+
+  const sc = sun.shadow.camera;
+  sc.left = -9; sc.right = 9; sc.top = 9; sc.bottom = -9; sc.near = 1; sc.far = 50;
+  sc.updateProjectionMatrix();
+
+  sun.shadow.bias = -0.0012;
+  sun.shadow.normalBias = 0.03;
+  scene.add(sun, sun.target);
+
+  /* ============================================================
+     GEOMETRY  (unit box, 24 verts, 6 groups of 4 verts each)
+     ============================================================ */
+  const BOX_GEO = new THREE.BoxGeometry(1, 1, 1);
+  const RAW_UV  = BOX_GEO.attributes.uv;   // pristine reference UVs
+
+  /* ============================================================
+     UV WINDOW BAKER
+     ------------------------------------------------------------
+     Given a box's current texture window [tx0..tx1] × [tz0..tz1]
+     (0..1 over the original base texture), rewrite the geometry's
+     UVs so the texture appears correctly sliced on every face.
+
+     Face vertex ranges:  +X:0-3  -X:4-7  +Y:8-11  -Y:12-15
+                          +Z:16-19  -Z:20-23
+
+     World-axis alignment of each face's U / V (from BoxGeometry):
+       +X : U ∝ -Z        -X : U ∝ +Z
+       +Y : U ∝ +X, V ∝ -Z
+       -Y : U ∝ +X, V ∝ +Z
+       +Z : U ∝ +X        -Z : U ∝ -X
+     ============================================================ */
+  function updateUVs(geo, tx0, tx1, tz0, tz1) {
+    const uv = geo.attributes.uv;
+    const wx = tx1 - tx0;
+    const wz = tz1 - tz0;
+
+    for (let i = 0; i < 24; i++) {
+      const u = RAW_UV.getX(i);
+      const v = RAW_UV.getY(i);
+      let nu, nv;
+      const face = (i / 4) | 0;
+
+      if (face === 0) {            // +X
+        nu = tz1 - u * wz; nv = v;
+      } else if (face === 1) {     // -X
+        nu = tz0 + u * wz; nv = v;
+      } else if (face === 2) {     // +Y
+        nu = tx0 + u * wx; nv = tz1 - v * wz;
+      } else if (face === 3) {     // -Y
+        nu = tx0 + u * wx; nv = tz0 + v * wz;
+      } else if (face === 4) {     // +Z
+        nu = tx0 + u * wx; nv = v;
+      } else {                     // -Z
+        nu = tx1 - u * wx; nv = v;
+      }
+      uv.setXY(i, nu, nv);
+    }
+    uv.needsUpdate = true;
+  }
+
+  /* ============================================================
+     BOX FACTORY
+     ------------------------------------------------------------
+     Each box owns:
+       • its own cloned geometry (so UVs can be baked per-box)
+       • three fresh materials (colour-tinted, sharing the 3 textures)
+     ============================================================ */
+  function makeBoxMesh(sizeX, sizeZ, color, tx0, tx1, tz0, tz1) {
+    const geo = BOX_GEO.clone();
+    updateUVs(geo, tx0, tx1, tz0, tz1);
+
+    const sideMat = new THREE.MeshLambertMaterial({ color, map: SIDE_TEX });
+    const topMat  = new THREE.MeshLambertMaterial({ color, map: TOP_TEX });
+    const botMat  = new THREE.MeshLambertMaterial({ color, map: BOTTOM_TEX });
+
+    const mesh = new THREE.Mesh(geo, [sideMat, sideMat, topMat, botMat, sideMat, sideMat]);
+    mesh.scale.set(sizeX, BOX_H, sizeZ);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  function disposeBox(mesh) {
+    mesh.geometry.dispose();
+    const m = mesh.material;
+    if (Array.isArray(m)) {
+      const seen = new Set();
+      for (const mat of m) {
+        if (!seen.has(mat)) { seen.add(mat); mat.dispose(); }
+      }
+    } else {
+      m.dispose();
+    }
+  }
+
+  /* ============================================================
+     GAME STATE
+     ============================================================ */
+  let layers    = [];
+  let moving    = null;
+  let debris    = [];
+  let state     = 'playing';
+  let score     = 0;
+  let best      = parseInt(localStorage.getItem('stack-tower-best') || '0', 10);
+  let speed     = START_SPEED;
+  let moveTime  = 0;
+  let inputLock = 0;
+
+  // screen-side spawner: -1 = left, +1 = right
+  let spawnScreenSide = -1;
+
+  /* ============================================================
+     DOM
+     ============================================================ */
+  const scoreEl      = document.getElementById('score');
+  const perfectEl    = document.getElementById('perfect');
+  const hintEl       = document.getElementById('hint');
+  const overlay      = document.getElementById('overlay');
+  const finalScoreEl = document.getElementById('finalScore');
+  const bestScoreEl  = document.getElementById('bestScore');
+  const restartBtn   = document.getElementById('restart');
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function layerColor(i) {
+    const h = (0.56 + i * 0.037) % 1;
+    return new THREE.Color().setHSL(h, 0.62, 0.56);
+  }
+
+  function sizeOn(obj, axis) {
+    return axis === 'x' ? obj.sizeX : obj.sizeZ;
+  }
+
+  /* ============================================================
+     GAME FLOW
+     ============================================================ */
+  function resetGame() {
+    for (const l of layers) { scene.remove(l.mesh); disposeBox(l.mesh); }
+    layers = [];
+
+    for (const d of debris) { scene.remove(d.mesh); disposeBox(d.mesh); }
+    debris = [];
+
+    if (moving) {
+      scene.remove(moving.mesh);
+      disposeBox(moving.mesh);
+      moving = null;
+    }
+
+    score     = 0;
+    speed     = START_SPEED;
+    moveTime  = 0;
+    state     = 'playing';
+    inputLock = 0.35;
+    spawnScreenSide = -1;
+
+    focusY = -CAM_LEAD;
+    camera.position.set(CAM_OFF.x, focusY + CAM_OFF.y, CAM_OFF.z);
+    camera.lookAt(0, focusY, 0);
+
+    // --- base layer (full texture window 0..1 × 0..1) ---
+    const baseMesh = makeBoxMesh(BASE_SIZE, BASE_SIZE, layerColor(0), 0, 1, 0, 1);
+    baseMesh.position.set(0, BOX_H / 2, 0);
+    scene.add(baseMesh);
+    layers.push({
+      sizeX: BASE_SIZE, sizeZ: BASE_SIZE,
+      x: 0, z: 0, y: BOX_H / 2,
+      tx0: 0, tx1: 1, tz0: 0, tz1: 1,
+      mesh: baseMesh
+    });
+
+    spawnNext();
+
+    scoreEl.textContent = '0';
+    overlay.classList.remove('show');
+    hintEl.style.display = '';
+  }
+
+  function spawnNext() {
+    const index = layers.length;
+    const prev  = layers[index - 1];
+
+    const axis  = (index % 2 === 1) ? 'x' : 'z';
+
+    const screenSide = spawnScreenSide;
+    spawnScreenSide *= -1;
+
+    const worldDir   = (axis === 'x') ? screenSide : -screenSide;
+    const startCoord = worldDir * RANGE;
+
+    const y = index * BOX_H + BOX_H / 2;
+
+    // copy prev layer's size AND texture window
+    const color = layerColor(index);
+    const mesh  = makeBoxMesh(prev.sizeX, prev.sizeZ, color, prev.tx0, prev.tx1, prev.tz0, prev.tz1);
+
+    const px = prev.x;
+    const pz = prev.z;
+
+    mesh.position.set(
+      axis === 'x' ? startCoord : px,
+      y,
+      axis === 'z' ? startCoord : pz
+    );
+    scene.add(mesh);
+
+    moving = {
+      axis, prev, color, startCoord,
+      sizeX: prev.sizeX, sizeZ: prev.sizeZ,
+      x: axis === 'x' ? startCoord : px,
+      z: axis === 'z' ? startCoord : pz,
+      y,
+      tx0: prev.tx0, tx1: prev.tx1,
+      tz0: prev.tz0, tz1: prev.tz1,
+      mesh
+    };
+
+    moveTime = 0;
+  }
+
+  function updateMoving(dt) {
+    if (!moving) return;
+
+    moveTime += dt;
+
+    const period = (2 * RANGE) / speed;
+    let p = (moveTime / period) % 2;
+    if (p < 0) p += 2;
+    const q = p < 1 ? p : 2 - p;
+
+    const coord = moving.startCoord * (1 - 2 * q);
+
+    moving[moving.axis] = coord;
+    moving.mesh.position[moving.axis] = coord;
+  }
+
+  /* ---------- CORE MECHANIC ---------- */
+  function drop() {
+    if (state !== 'playing' || !moving || inputLock > 0) return;
+
+    const prev     = moving.prev;
+    const axis     = moving.axis;
+    const prevSize = sizeOn(prev, axis);
+    const rawDelta = moving[axis] - prev[axis];
+
+    // ---- complete miss ----
+    if (prevSize - Math.abs(rawDelta) <= 0.001) {
+      gameOver();
+      return;
+    }
+
+    // ---- perfect snap ----
+    let delta   = rawDelta;
+    let perfect = false;
+    if (Math.abs(delta) < PERFECT_TOL) {
+      delta = 0;
+      perfect = true;
+    }
+
+    const newSize   = prevSize - Math.abs(delta);
+    const newCenter = prev[axis] + delta / 2;
+
+    /* ---------------------------------------------------------
+       DEBRIS  (uses the moving box's CURRENT window)
+       --------------------------------------------------------- */
+    if (!perfect) {
+      const cutSize   = Math.abs(delta);
+      const cutCenter = prev[axis] + Math.sign(delta) * prevSize / 2 + delta / 2;
+      const texCut    = cutSize / BASE_SIZE;
+
+      let dtx0 = moving.tx0, dtx1 = moving.tx1;
+      let dtz0 = moving.tz0, dtz1 = moving.tz1;
+
+      if (axis === 'x') {
+        if (delta > 0) { dtx0 = moving.tx1 - texCut; dtx1 = moving.tx1; }
+        else           { dtx0 = moving.tx0;          dtx1 = moving.tx0 + texCut; }
+      } else {
+        if (delta > 0) { dtz0 = moving.tz1 - texCut; dtz1 = moving.tz1; }
+        else           { dtz0 = moving.tz0;          dtz1 = moving.tz0 + texCut; }
+      }
+
+      const cx = axis === 'x' ? cutCenter : moving.x;
+      const cz = axis === 'z' ? cutCenter : moving.z;
+      const dsx = axis === 'x' ? cutSize   : moving.sizeX;
+      const dsz = axis === 'z' ? cutSize   : moving.sizeZ;
+
+      spawnDebris(dsx, dsz, cx, moving.y, cz, moving.color, dtx0, dtx1, dtz0, dtz1, false);
+    }
+
+    /* ---------------------------------------------------------
+       KEEP THE OVERLAP  —  shrink the moving box's window
+       --------------------------------------------------------- */
+    const texCut = Math.abs(delta) / BASE_SIZE;
+
+    if (axis === 'x') {
+      if (delta > 0) moving.tx1 -= texCut;
+      else           moving.tx0 += texCut;
+      moving.sizeX = newSize;
+      moving.x     = newCenter;
+    } else {
+      if (delta > 0) moving.tz1 -= texCut;
+      else           moving.tz0 += texCut;
+      moving.sizeZ = newSize;
+      moving.z     = newCenter;
+    }
+
+    // Re-bake UVs on the moving mesh and apply the new dimensions
+    updateUVs(moving.mesh.geometry, moving.tx0, moving.tx1, moving.tz0, moving.tz1);
+    moving.mesh.scale.set(moving.sizeX, BOX_H, moving.sizeZ);
+    moving.mesh.position.set(moving.x, moving.y, moving.z);
+
+    layers.push({
+      sizeX: moving.sizeX, sizeZ: moving.sizeZ,
+      x: moving.x, z: moving.z, y: moving.y,
+      tx0: moving.tx0, tx1: moving.tx1,
+      tz0: moving.tz0, tz1: moving.tz1,
+      mesh: moving.mesh
+    });
+
+    score++;
+    scoreEl.textContent = score;
+    if (score === 1) hintEl.style.display = 'none';
+    if (perfect) flashPerfect();
+
+    speed = Math.min(START_SPEED + score * SPEED_STEP, MAX_SPEED);
+
+    moving = null;
+    spawnNext();
+  }
+
+  function gameOver() {
+    state = 'over';
+
+    if (moving) {
+      spawnDebris(
+        moving.sizeX, moving.sizeZ,
+        moving.x, moving.y, moving.z,
+        moving.color,
+        moving.tx0, moving.tx1, moving.tz0, moving.tz1,
+        true
+      );
+      scene.remove(moving.mesh);
+      disposeBox(moving.mesh);
+      moving = null;
+    }
+
+    best = Math.max(best, score);
+    localStorage.setItem('stack-tower-best', String(best));
+
+    finalScoreEl.textContent = score;
+    bestScoreEl.textContent  = best;
+
+    setTimeout(() => overlay.classList.add('show'), 420);
+  }
+
+  /* ============================================================
+     DEBRIS
+     ============================================================ */
+  function spawnDebris(sx, sz, x, y, z, color, tx0, tx1, tz0, tz1, isFullBox) {
+    const mesh = makeBoxMesh(sx, sz, color, tx0, tx1, tz0, tz1);
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+
+    const spread = isFullBox ? 1.4 : 0.6;
+
+    debris.push({
+      mesh,
+      vx: (Math.random() - 0.5) * spread,
+      vy: isFullBox ? 0 : 0.6,
+      vz: (Math.random() - 0.5) * spread,
+      rx: (Math.random() - 0.5) * 6,
+      rz: (Math.random() - 0.5) * 6,
+      life: 4
+    });
+  }
+
+  function updateDebris(dt) {
+    for (let i = debris.length - 1; i >= 0; i--) {
+      const d = debris[i];
+
+      d.vy -= GRAVITY * dt;
+
+      d.mesh.position.x += d.vx * dt;
+      d.mesh.position.y += d.vy * dt;
+      d.mesh.position.z += d.vz * dt;
+
+      d.mesh.rotation.x += d.rx * dt;
+      d.mesh.rotation.z += d.rz * dt;
+
+      d.life -= dt;
+
+      if (d.life <= 0 || d.mesh.position.y < focusY - 16) {
+        scene.remove(d.mesh);
+        disposeBox(d.mesh);
+        debris.splice(i, 1);
+      }
+    }
+  }
+
+  /* ============================================================
+     UI
+     ============================================================ */
+  let perfectTimer = null;
+  function flashPerfect() {
+    perfectEl.style.opacity = '1';
+    clearTimeout(perfectTimer);
+    perfectTimer = setTimeout(() => { perfectEl.style.opacity = '0'; }, 380);
+  }
+
+  /* ============================================================
+     INPUT
+     ============================================================ */
+  function onPointerDown(e) {
+    if (e.target && e.target.closest && e.target.closest('#overlay')) return;
+    drop();
+  }
+
+  window.addEventListener('pointerdown', onPointerDown, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowDown' || e.code === 'Enter') {
+      e.preventDefault();
+      if (state === 'over') return;
+      drop();
+    }
+  });
+
+  restartBtn.addEventListener('click', () => resetGame());
+
+  /* ============================================================
+     RESIZE
+     ============================================================ */
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  /* ============================================================
+     MAIN LOOP
+     ============================================================ */
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    if (inputLock > 0) inputLock -= dt;
+
+    if (state === 'playing') updateMoving(dt);
+    updateDebris(dt);
+
+    let topY = 0;
+    if (moving)             topY = moving.y;
+    else if (layers.length) topY = layers[layers.length - 1].y;
+
+    const targetFocus = topY - CAM_LEAD;
+    focusY += (targetFocus - focusY) * Math.min(1, dt * 4.5);
+
+    camera.position.set(CAM_OFF.x, focusY + CAM_OFF.y, CAM_OFF.z);
+    camera.lookAt(0, focusY, 0);
+
+    sun.position.set(6, focusY + 12, 5);
+    sun.target.position.set(0, focusY, 0);
+    sun.target.updateMatrixWorld();
+
+    renderer.render(scene, camera);
+  }
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  resetGame();
+  animate();
+  </script>
+</body>
+</html>
